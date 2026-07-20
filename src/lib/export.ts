@@ -17,34 +17,66 @@ export function downloadWord(r: MinisterRecord): void {
   document.body.removeChild(a);
 }
 
+async function renderCanvasForRecord(r: MinisterRecord): Promise<HTMLCanvasElement> {
+  const html2canvasModule = await import('html2canvas');
+  const html2canvas = html2canvasModule.default || html2canvasModule;
+
+  let target = document.getElementById('pdfRenderTarget');
+  if (!target) {
+    target = document.createElement('div');
+    target.id = 'pdfRenderTarget';
+    document.body.appendChild(target);
+  }
+
+  // Position at (0,0) behind page with opacity 1 so html2canvas renders full opacity
+  target.style.cssText = 'position:fixed;top:0;left:0;width:750px;z-index:-99999;opacity:1;visibility:visible;pointer-events:none;background:#ffffff;padding:0;margin:0;';
+  target.innerHTML = cvHTML(r);
+
+  // Small delay to ensure browser layout and fonts are fully calculated
+  await new Promise((res) => setTimeout(res, 60));
+
+  const canvas = await html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+    windowWidth: 750,
+  });
+
+  target.innerHTML = '';
+  return canvas;
+}
+
 export async function downloadPDF(r: MinisterRecord): Promise<void> {
   const jspdfModule = await import('jspdf');
   const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
 
-  return new Promise((resolve) => {
-    let target = document.getElementById('pdfRenderTarget');
-    if (!target) {
-      target = document.createElement('div');
-      target.id = 'pdfRenderTarget';
-      target.style.cssText = 'position:fixed;left:-9999px;top:0;width:760px;';
-      document.body.appendChild(target);
-    }
-    target.innerHTML = cvHTML(r);
+  const canvas = await renderCanvasForRecord(r);
+  const imgData = canvas.toDataURL('image/png');
 
-    const doc = new jsPDF('p', 'pt', 'a4');
-    doc.html(target, {
-      x: 20,
-      y: 20,
-      width: 555,
-      windowWidth: 800,
-      html2canvas: { scale: 0.72, useCORS: true },
-      callback: function (d: { save: (name: string) => void }) {
-        d.save(fileSafeName(r.name) + '-CV.pdf');
-        target!.innerHTML = '';
-        resolve();
-      },
-    });
-  });
+  // A4 dimensions in pt: 595.28 x 841.89
+  const doc = new jsPDF('p', 'pt', 'a4');
+  const pdfWidth = doc.internal.pageSize.getWidth();
+  const pdfHeight = doc.internal.pageSize.getHeight();
+
+  const imgWidth = pdfWidth - 40; // 20pt margin on left/right
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  let heightLeft = imgHeight;
+  let position = 20;
+
+  doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+  heightLeft -= (pdfHeight - 40);
+
+  // Multi-page handling if CV is long
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight + 20;
+    doc.addPage();
+    doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+    heightLeft -= (pdfHeight - 40);
+  }
+
+  doc.save(fileSafeName(r.name) + '-CV.pdf');
 }
 
 export async function downloadAllZIP(records: MinisterRecord[]): Promise<void> {
@@ -59,14 +91,6 @@ export async function downloadAllZIP(records: MinisterRecord[]): Promise<void> {
   const wordFolder = zip.folder('Word')!;
   const pdfFolder = zip.folder('PDF')!;
 
-  let target = document.getElementById('pdfRenderTarget');
-  if (!target) {
-    target = document.createElement('div');
-    target.id = 'pdfRenderTarget';
-    target.style.cssText = 'position:fixed;left:-9999px;top:0;width:760px;';
-    document.body.appendChild(target);
-  }
-
   for (const r of records) {
     // Word
     wordFolder.file(
@@ -75,23 +99,31 @@ export async function downloadAllZIP(records: MinisterRecord[]): Promise<void> {
     );
 
     // PDF
-    await new Promise<void>((resolve) => {
-      target!.innerHTML = cvHTML(r);
-      const doc = new jsPDF('p', 'pt', 'a4');
-      doc.html(target!, {
-        x: 20,
-        y: 20,
-        width: 555,
-        windowWidth: 800,
-        html2canvas: { scale: 0.72, useCORS: true },
-        callback: function (d: { output: (type: string) => Blob }) {
-          const blob = d.output('blob');
-          pdfFolder.file(fileSafeName(r.name) + '-CV.pdf', blob);
-          target!.innerHTML = '';
-          resolve();
-        },
-      });
-    });
+    const canvas = await renderCanvasForRecord(r);
+    const imgData = canvas.toDataURL('image/png');
+
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const pdfHeight = doc.internal.pageSize.getHeight();
+
+    const imgWidth = pdfWidth - 40;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 20;
+
+    doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+    heightLeft -= (pdfHeight - 40);
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + 20;
+      doc.addPage();
+      doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - 40);
+    }
+
+    const blob = doc.output('blob');
+    pdfFolder.file(fileSafeName(r.name) + '-CV.pdf', blob);
   }
 
   const zipBlob = await zip.generateAsync({ type: 'blob' });

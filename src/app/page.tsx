@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MinisterRecord } from '@/lib/types';
-import { loadRecords, saveRecords } from '@/lib/storage';
 import { downloadWord, downloadPDF, downloadAllZIP } from '@/lib/export';
 
 import Header from '@/components/Header';
@@ -13,41 +12,76 @@ import Toast from '@/components/Toast';
 
 export default function Home() {
   const [records, setRecords] = useState<MinisterRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>('form');
   const [editingRecord, setEditingRecord] = useState<MinisterRecord | null>(null);
   const [toastMsg, setToastMsg] = useState('');
 
-  // Load records on mount
+  // Fetch records from API on mount
   useEffect(() => {
-    setRecords(loadRecords());
+    fetchRecords();
   }, []);
 
-  function persist(updated: MinisterRecord[]) {
-    setRecords(updated);
-    saveRecords(updated);
+  async function fetchRecords() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/records');
+      if (res.ok) {
+        const data = await res.json();
+        setRecords(data);
+      } else {
+        showToast('Failed to load database records.');
+      }
+    } catch {
+      showToast('Error connecting to backend database.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function showToast(msg: string) {
     setToastMsg(msg);
   }
 
-  function handleSave(data: Omit<MinisterRecord, 'id'> & { id?: string }) {
+  async function handleSave(data: Omit<MinisterRecord, 'id'> & { id?: string }) {
     if (data.id) {
-      // Update existing
-      const updated = records.map((r) =>
-        r.id === data.id ? { ...data, id: data.id } as MinisterRecord : r
-      );
-      persist(updated);
-      showToast('Record updated.');
+      // Update existing record via API
+      try {
+        const res = await fetch(`/api/records/${data.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (res.ok) {
+          showToast('Record updated in database.');
+          fetchRecords();
+        } else {
+          const errData = await res.json();
+          showToast(errData.error || 'Failed to update record.');
+        }
+      } catch {
+        showToast('Error connecting to server.');
+      }
     } else {
-      // Create new
-      const newRecord: MinisterRecord = {
-        ...data,
-        id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-      };
-      const updated = [...records, newRecord];
-      persist(updated);
-      showToast('Record saved to register.');
+      // Create new record via API
+      try {
+        const res = await fetch('/api/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (res.ok) {
+          showToast('Record saved to office database.');
+          fetchRecords();
+        } else {
+          const errData = await res.json();
+          showToast(errData.error || 'Failed to save record.');
+        }
+      } catch {
+        showToast('Error connecting to server.');
+      }
     }
     setEditingRecord(null);
     setActiveTab('roster');
@@ -58,10 +92,22 @@ export default function Home() {
     setActiveTab('form');
   }
 
-  function handleDelete(id: string) {
-    const updated = records.filter((r) => r.id !== id);
-    persist(updated);
-    showToast('Record deleted.');
+  async function handleDelete(id: string) {
+    try {
+      const res = await fetch(`/api/records/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        showToast('Record deleted from database.');
+        fetchRecords();
+      } else {
+        const errData = await res.json();
+        showToast(errData.error || 'Failed to delete record.');
+      }
+    } catch {
+      showToast('Error connecting to server.');
+    }
   }
 
   function handleClear() {

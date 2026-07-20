@@ -41,63 +41,154 @@ export function cvHTML(r: MinisterRecord): string {
   });
 
   return `
-  <div style="font-family:Georgia,'Times New Roman',serif;color:#1B2A20;width:100%;max-width:720px;margin:0 auto;padding:36px 40px;background:#ffffff;">
-    <div style="display:table;width:100%;border-bottom:3px solid #1F4D36;padding-bottom:16px;margin-bottom:20px;">
-      <div style="display:table-cell;vertical-align:middle;width:64px;">
-        <div style="width:54px;height:54px;border-radius:50%;background:#1F4D36;border:2px solid #A2792B;color:#fff;text-align:center;line-height:54px;font-size:19px;font-weight:bold;">${esc(initials(r.name))}</div>
-      </div>
-      <div style="display:table-cell;vertical-align:middle;padding-left:16px;">
-        <div style="font-size:24px;font-weight:bold;color:#123021;">${esc(r.name)}</div>
-        <div style="font-size:13.5px;color:#4A5A4E;margin-top:2px;">${esc(designationLabel(r))}${r.church ? ' &middot; ' + esc(r.church) : ''}</div>
-      </div>
-      <div style="display:table-cell;vertical-align:middle;text-align:right;white-space:nowrap;">
-        <div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#4A5A4E;">Credential No.</div>
-        <div style="font-size:15px;font-weight:bold;color:#A2792B;font-family:'Courier New',monospace;">${esc(r.credentialNumber)}</div>
+  <div style="font-family:'Inter', 'Arial', sans-serif; color:#1B2A20; width:100%; max-width:750px; margin:0 auto; padding:48px 48px; background:#ffffff; box-sizing:border-box; line-height:1.5;">
+    
+    <!-- CV TITLE & NAME HEADER -->
+    <div style="border-bottom:2.5px solid #1F4D36; padding-bottom:16px; margin-bottom:24px;">
+      <div style="display:table; width:100%;">
+        <div style="display:table-cell; vertical-align:top;">
+          <h1 style="font-family:Georgia, serif; font-size:28px; font-weight:bold; color:#123021; margin:0 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">
+            ${esc(r.name)}
+          </h1>
+          <div style="font-size:15px; font-weight:600; color:#A2792B; margin-bottom:6px;">
+            ${esc(designationLabel(r))}${r.church ? ' &bull; ' + esc(r.church) : ''}
+          </div>
+          <div style="font-size:12.5px; color:#4A5A4E; line-height:1.6;">
+            ${r.phone ? '<strong>Phone:</strong> ' + esc(r.phone) : ''}
+            ${r.phone && r.email ? ' &nbsp;|&nbsp; ' : ''}
+            ${r.email ? '<strong>Email:</strong> ' + esc(r.email) : ''}
+            ${(r.phone || r.email) && r.dob ? ' &nbsp;|&nbsp; ' : ''}
+            ${r.dob ? '<strong>DOB:</strong> ' + esc(r.dob) : ''}
+          </div>
+        </div>
+        <div style="display:table-cell; vertical-align:top; text-align:right; width:180px;">
+          <div style="display:inline-block; border:1px solid #1F4D36; padding:6px 12px; border-radius:4px; background:#F5F8F6; text-align:center;">
+            <div style="font-size:9.5px; font-weight:bold; text-transform:uppercase; letter-spacing:0.1em; color:#1F4D36;">CURRICULUM VITAE</div>
+            <div style="font-size:11px; font-weight:bold; color:#A2792B; font-family:monospace; margin-top:2px;">No: ${esc(val(r.credentialNumber))}</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <h3 style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#1F4D36;border-bottom:1px solid #DDD6C2;padding-bottom:6px;margin:22px 0 10px;">Ministerial Record</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
-      <tr><td style="padding:4px 0;width:38%;color:#4A5A4E;">Status</td><td style="padding:4px 0;">${esc(val(r.status))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Year Inducted</td><td style="padding:4px 0;">${esc(val(r.yearInducted))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Year Licensed</td><td style="padding:4px 0;">${esc(val(r.yearLicensed))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Year Ordained</td><td style="padding:4px 0;">${esc(val(r.yearOrdained))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">District</td><td style="padding:4px 0;">${esc(val(r.district))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Zone</td><td style="padding:4px 0;">${esc(val(r.zone))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Church</td><td style="padding:4px 0;">${esc(val(r.church))}</td></tr>
-    </table>
+    <!-- ECCLESIASTICAL CREDENTIALS & SUMMARY -->
+    <div style="margin-bottom:22px;">
+      <h2 style="font-family:Georgia, serif; font-size:13px; font-weight:bold; letter-spacing:0.08em; text-transform:uppercase; color:#1F4D36; border-bottom:1.5px solid #1F4D36; padding-bottom:4px; margin:0 0 10px 0;">
+        Ministerial Status &amp; Credentials
+      </h2>
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tbody>
+          <tr>
+            <td style="padding:4px 0; width:30%; color:#4A5A4E; font-weight:500;">Ecclesiastical Status:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#123021;">${esc(val(r.status))}</td>
+            <td style="padding:4px 0; width:25%; color:#4A5A4E; font-weight:500;">Year Inducted:</td>
+            <td style="padding:4px 0; font-weight:600; color:#123021;">${esc(val(r.yearInducted))}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Year Licensed:</td>
+            <td style="padding:4px 0; font-weight:600; color:#123021;">${esc(val(r.yearLicensed))}</td>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Year Ordained:</td>
+            <td style="padding:4px 0; font-weight:600; color:#123021;">${esc(val(r.yearOrdained))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <h3 style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#1F4D36;border-bottom:1px solid #DDD6C2;padding-bottom:6px;margin:22px 0 10px;">Personal &amp; Contact Information</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
-      <tr><td style="padding:4px 0;width:38%;color:#4A5A4E;">Date of Birth</td><td style="padding:4px 0;">${esc(val(r.dob))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Email</td><td style="padding:4px 0;">${esc(val(r.email))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Phone</td><td style="padding:4px 0;">${esc(val(r.phone))}</td></tr>
-    </table>
+    <!-- MINISTERIAL & PASTORAL JURISDICTION -->
+    <div style="margin-bottom:22px;">
+      <h2 style="font-family:Georgia, serif; font-size:13px; font-weight:bold; letter-spacing:0.08em; text-transform:uppercase; color:#1F4D36; border-bottom:1.5px solid #1F4D36; padding-bottom:4px; margin:0 0 10px 0;">
+        Ministerial Jurisdiction &amp; Appointment
+      </h2>
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tbody>
+          <tr>
+            <td style="padding:4px 0; width:30%; color:#4A5A4E; font-weight:500;">Primary Designation:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#123021;">${esc(designationLabel(r))}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Local Church / Station:</td>
+            <td style="padding:4px 0; font-weight:600; color:#123021;">${esc(val(r.church))}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">District Jurisdiction:</td>
+            <td style="padding:4px 0; color:#123021;">${r.district ? esc(r.district) + ' District' : '—'}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Zonal Jurisdiction:</td>
+            <td style="padding:4px 0; color:#123021;">${r.zone ? esc(r.zone) + ' Zone' : '—'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <h3 style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#1F4D36;border-bottom:1px solid #DDD6C2;padding-bottom:6px;margin:22px 0 10px;">Educational Qualification</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead>
-        <tr style="background:#F5F2E8;">
-          <th style="text-align:left;padding:6px 8px;border:1px solid #DDD6C2;">Level</th>
-          <th style="text-align:left;padding:6px 8px;border:1px solid #DDD6C2;">Institution</th>
-          <th style="text-align:left;padding:6px 8px;border:1px solid #DDD6C2;">Date</th>
-          <th style="text-align:left;padding:6px 8px;border:1px solid #DDD6C2;">Certificate(s)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td style="padding:6px 8px;border:1px solid #DDD6C2;">Primary</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.primarySchool))}</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.primaryDate))}</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.primaryCert))}</td></tr>
-        <tr><td style="padding:6px 8px;border:1px solid #DDD6C2;">Secondary</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.secondarySchool))}</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.secondaryDate))}</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.secondaryCert))}</td></tr>
-        <tr><td style="padding:6px 8px;border:1px solid #DDD6C2;">Tertiary</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.tertiary))}</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.tertiaryDate))}</td><td style="padding:6px 8px;border:1px solid #DDD6C2;">${esc(val(r.tertiaryCert))}</td></tr>
-      </tbody>
-    </table>
+    <!-- ACADEMIC & EDUCATIONAL QUALIFICATIONS -->
+    <div style="margin-bottom:22px;">
+      <h2 style="font-family:Georgia, serif; font-size:13px; font-weight:bold; letter-spacing:0.08em; text-transform:uppercase; color:#1F4D36; border-bottom:1.5px solid #1F4D36; padding-bottom:4px; margin:0 0 10px 0;">
+        Academic Qualifications
+      </h2>
+      <table style="width:100%; border-collapse:collapse; font-size:12.5px; border:1px solid #DDD6C2;">
+        <thead>
+          <tr style="background:#F5F8F6; color:#1F4D36; font-weight:bold; text-transform:uppercase; font-size:10.5px; letter-spacing:0.05em;">
+            <th style="padding:7px 10px; border:1px solid #DDD6C2; text-align:left; width:20%;">Level</th>
+            <th style="padding:7px 10px; border:1px solid #DDD6C2; text-align:left;">Institution</th>
+            <th style="padding:7px 10px; border:1px solid #DDD6C2; text-align:center; width:15%;">Year</th>
+            <th style="padding:7px 10px; border:1px solid #DDD6C2; text-align:left; width:32%;">Certificate / Degree</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; font-weight:600; color:#4A5A4E;">Tertiary</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.tertiary))}</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; text-align:center;">${esc(val(r.tertiaryDate))}</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.tertiaryCert))}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; font-weight:600; color:#4A5A4E;">Secondary</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.secondarySchool))}</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; text-align:center;">${esc(val(r.secondaryDate))}</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.secondaryCert))}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; font-weight:600; color:#4A5A4E;">Primary</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.primarySchool))}</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; text-align:center;">${esc(val(r.primaryDate))}</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.primaryCert))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <h3 style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#1F4D36;border-bottom:1px solid #DDD6C2;padding-bottom:6px;margin:22px 0 10px;">Theological Education</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
-      <tr><td style="padding:4px 0;width:38%;color:#4A5A4E;">School(s) Attended</td><td style="padding:4px 0;">${esc(val(r.theoSchool))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Date</td><td style="padding:4px 0;">${esc(val(r.theoDate))}</td></tr>
-      <tr><td style="padding:4px 0;color:#4A5A4E;">Certificate(s)</td><td style="padding:4px 0;">${esc(val(r.theoCert))}</td></tr>
-    </table>
+    <!-- THEOLOGICAL EDUCATION -->
+    <div style="margin-bottom:28px;">
+      <h2 style="font-family:Georgia, serif; font-size:13px; font-weight:bold; letter-spacing:0.08em; text-transform:uppercase; color:#1F4D36; border-bottom:1.5px solid #1F4D36; padding-bottom:4px; margin:0 0 10px 0;">
+        Theological Education &amp; Training
+      </h2>
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tbody>
+          <tr>
+            <td style="padding:4px 0; width:30%; color:#4A5A4E; font-weight:500;">Seminary / Bible College:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#123021;">${esc(val(r.theoSchool))}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Year / Period:</td>
+            <td style="padding:4px 0; color:#123021;">${esc(val(r.theoDate))}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Qualifications Obtained:</td>
+            <td style="padding:4px 0; color:#123021;">${esc(val(r.theoCert))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <div style="margin-top:28px;padding-top:10px;border-top:1px solid #DDD6C2;font-size:10.5px;color:#8a9188;">Generated ${today} &middot; Ministerial Records Register</div>
+    <!-- REFERENCES / FOOTER -->
+    <div style="margin-top:36px; padding-top:16px; border-top:1px solid #DDD6C2; font-size:11px; color:#4A5A4E; display:table; width:100%;">
+      <div style="display:table-cell; vertical-align:middle;">
+        <strong>References:</strong> Available upon request.
+      </div>
+      <div style="display:table-cell; vertical-align:middle; text-align:right; font-size:10px; color:#A2792B;">
+        Generated ${today}
+      </div>
+    </div>
+
   </div>`;
 }

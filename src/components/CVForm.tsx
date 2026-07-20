@@ -86,6 +86,8 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
       setTheoDate(editingRecord.theoDate || '');
       setTheoCert(editingRecord.theoCert || '');
       setStep(0);
+      // Scroll to top when editing
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [editingRecord]);
 
@@ -117,8 +119,12 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
-      // Jump to step 0 (Ministerial Record) where required fields are
       if (isMobile) setStep(0);
+      // Scroll to the first error
+      setTimeout(() => {
+        const firstError = document.querySelector('.input-error, .field-error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
 
@@ -140,42 +146,46 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
 
   function renderStep1() {
     return (
-      <div className="card">
+      <div className="card" key="step1">
         <div className="section-title">
           <span className="idx">1</span>
           <h2>Ministerial Record</h2>
         </div>
         <div className="grid">
           <div className="field full">
-            <label>Full Name <span className="req">*</span></label>
+            <label htmlFor="f-name">Full Name <span className="req">*</span></label>
             <input
+              id="f-name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(prev => ({...prev, name: ''})); }}
               placeholder="e.g. Rev. John A. Lawal"
               className={errors.name ? 'input-error' : ''}
+              autoComplete="name"
             />
             {errors.name && <span className="field-error">{errors.name}</span>}
           </div>
           <div className="field">
-            <label>Credential Number <span className="req">*</span></label>
+            <label htmlFor="f-credential">Credential Number <span className="req">*</span></label>
             <input
+              id="f-credential"
               type="text"
               value={credentialNumber}
-              onChange={(e) => setCredentialNumber(e.target.value)}
+              onChange={(e) => { setCredentialNumber(e.target.value); if (errors.credentialNumber) setErrors(prev => ({...prev, credentialNumber: ''})); }}
               placeholder="e.g. FGCN/CR/00234"
               className={errors.credentialNumber ? 'input-error' : ''}
             />
             {errors.credentialNumber && <span className="field-error">{errors.credentialNumber}</span>}
           </div>
           <div className="field">
-            <label>Designation <span className="req">*</span></label>
+            <label htmlFor="f-designation">Designation <span className="req">*</span></label>
             <select
+              id="f-designation"
               value={designation}
-              onChange={(e) => setDesignation(e.target.value)}
+              onChange={(e) => { setDesignation(e.target.value); if (errors.designation) setErrors(prev => ({...prev, designation: ''})); }}
               className={errors.designation ? 'input-error' : ''}
             >
-              <option value="">Select&hellip;</option>
+              <option value="">Select…</option>
               <option>District Overseer</option>
               <option>Zonal Superintendent</option>
               <option>Senior Pastor</option>
@@ -187,56 +197,58 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           </div>
           {designation === 'Other' && (
             <div className="field">
-              <label>Specify Designation</label>
+              <label htmlFor="f-designation-other">Specify Designation</label>
               <input
+                id="f-designation-other"
                 type="text"
                 value={designationOther}
                 onChange={(e) => setDesignationOther(e.target.value)}
                 placeholder="Other designation"
+                autoFocus
               />
             </div>
           )}
           <div className="field full">
             <label>Status <span className="req">*</span></label>
-            <div className="radio-row">
+            <div className="radio-row" role="radiogroup" aria-label="Ministerial Status">
               {['Ordained', 'Licensed', 'Exhorter'].map((s) => (
-                <label className="radio-opt" key={s}>
+                <label className={`radio-opt${status === s ? ' radio-opt-checked' : ''}`} key={s}>
                   <input
                     type="radio"
                     name="status"
                     value={s}
                     checked={status === s}
-                    onChange={() => setStatus(s)}
+                    onChange={() => { setStatus(s); if (errors.status) setErrors(prev => ({...prev, status: ''})); }}
                   />
-                  {s}
+                  <span>{s}</span>
                 </label>
               ))}
             </div>
             {errors.status && <span className="field-error">{errors.status}</span>}
           </div>
           <div className="field">
-            <label>Year Inducted</label>
-            <input type="text" value={yearInducted} onChange={(e) => setYearInducted(e.target.value)} placeholder="YYYY" />
+            <label htmlFor="f-year-inducted">Year Inducted</label>
+            <input id="f-year-inducted" type="text" value={yearInducted} onChange={(e) => setYearInducted(e.target.value)} placeholder="YYYY" inputMode="numeric" maxLength={4} />
           </div>
           <div className="field">
-            <label>Year Licensed</label>
-            <input type="text" value={yearLicensed} onChange={(e) => setYearLicensed(e.target.value)} placeholder="YYYY" />
+            <label htmlFor="f-year-licensed">Year Licensed</label>
+            <input id="f-year-licensed" type="text" value={yearLicensed} onChange={(e) => setYearLicensed(e.target.value)} placeholder="YYYY" inputMode="numeric" maxLength={4} />
           </div>
           <div className="field">
-            <label>Year Ordained</label>
-            <input type="text" value={yearOrdained} onChange={(e) => setYearOrdained(e.target.value)} placeholder="YYYY" />
+            <label htmlFor="f-year-ordained">Year Ordained</label>
+            <input id="f-year-ordained" type="text" value={yearOrdained} onChange={(e) => setYearOrdained(e.target.value)} placeholder="YYYY" inputMode="numeric" maxLength={4} />
           </div>
           <div className="field">
-            <label>District</label>
-            <input type="text" value={district} onChange={(e) => setDistrict(e.target.value)} />
+            <label htmlFor="f-district">District</label>
+            <input id="f-district" type="text" value={district} onChange={(e) => setDistrict(e.target.value)} />
           </div>
           <div className="field">
-            <label>Zone</label>
-            <input type="text" value={zone} onChange={(e) => setZone(e.target.value)} />
+            <label htmlFor="f-zone">Zone</label>
+            <input id="f-zone" type="text" value={zone} onChange={(e) => setZone(e.target.value)} />
           </div>
           <div className="field">
-            <label>Church</label>
-            <input type="text" value={church} onChange={(e) => setChurch(e.target.value)} />
+            <label htmlFor="f-church">Church</label>
+            <input id="f-church" type="text" value={church} onChange={(e) => setChurch(e.target.value)} />
           </div>
         </div>
       </div>
@@ -245,23 +257,23 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
 
   function renderStep2() {
     return (
-      <div className="card">
+      <div className="card" key="step2">
         <div className="section-title">
           <span className="idx">2</span>
           <h2>Personal &amp; Contact Information</h2>
         </div>
         <div className="grid">
           <div className="field">
-            <label>Date of Birth</label>
-            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+            <label htmlFor="f-dob">Date of Birth</label>
+            <input id="f-dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
           </div>
           <div className="field">
-            <label>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
+            <label htmlFor="f-email">Email</label>
+            <input id="f-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" autoComplete="email" />
           </div>
           <div className="field">
-            <label>Phone</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234…" />
+            <label htmlFor="f-phone">Phone</label>
+            <input id="f-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234…" autoComplete="tel" />
           </div>
         </div>
       </div>
@@ -270,7 +282,7 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
 
   function renderStep3() {
     return (
-      <div className="card">
+      <div className="card" key="step3">
         <div className="section-title">
           <span className="idx">3</span>
           <h2>Educational Qualification</h2>
@@ -280,16 +292,16 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           <span className="edu-row-label">Primary School</span>
           <div className="grid">
             <div className="field">
-              <label>School (if none, type N/A)</label>
-              <input type="text" value={primarySchool} onChange={(e) => setPrimarySchool(e.target.value)} />
+              <label htmlFor="f-pri-school">School (if none, type N/A)</label>
+              <input id="f-pri-school" type="text" value={primarySchool} onChange={(e) => setPrimarySchool(e.target.value)} />
             </div>
             <div className="field">
-              <label>Date</label>
-              <input type="text" value={primaryDate} onChange={(e) => setPrimaryDate(e.target.value)} placeholder="e.g. 1998" />
+              <label htmlFor="f-pri-date">Date</label>
+              <input id="f-pri-date" type="text" value={primaryDate} onChange={(e) => setPrimaryDate(e.target.value)} placeholder="e.g. 1998" />
             </div>
             <div className="field">
-              <label>Certificates</label>
-              <input type="text" value={primaryCert} onChange={(e) => setPrimaryCert(e.target.value)} />
+              <label htmlFor="f-pri-cert">Certificates</label>
+              <input id="f-pri-cert" type="text" value={primaryCert} onChange={(e) => setPrimaryCert(e.target.value)} />
             </div>
           </div>
         </div>
@@ -298,16 +310,16 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           <span className="edu-row-label">Secondary School</span>
           <div className="grid">
             <div className="field">
-              <label>School (if none, type N/A)</label>
-              <input type="text" value={secondarySchool} onChange={(e) => setSecondarySchool(e.target.value)} />
+              <label htmlFor="f-sec-school">School (if none, type N/A)</label>
+              <input id="f-sec-school" type="text" value={secondarySchool} onChange={(e) => setSecondarySchool(e.target.value)} />
             </div>
             <div className="field">
-              <label>Date</label>
-              <input type="text" value={secondaryDate} onChange={(e) => setSecondaryDate(e.target.value)} placeholder="e.g. 2004" />
+              <label htmlFor="f-sec-date">Date</label>
+              <input id="f-sec-date" type="text" value={secondaryDate} onChange={(e) => setSecondaryDate(e.target.value)} placeholder="e.g. 2004" />
             </div>
             <div className="field">
-              <label>Certificates</label>
-              <input type="text" value={secondaryCert} onChange={(e) => setSecondaryCert(e.target.value)} />
+              <label htmlFor="f-sec-cert">Certificates</label>
+              <input id="f-sec-cert" type="text" value={secondaryCert} onChange={(e) => setSecondaryCert(e.target.value)} />
             </div>
           </div>
         </div>
@@ -316,16 +328,16 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           <span className="edu-row-label">Tertiary</span>
           <div className="grid">
             <div className="field">
-              <label>Institution (if none, type N/A)</label>
-              <input type="text" value={tertiary} onChange={(e) => setTertiary(e.target.value)} />
+              <label htmlFor="f-tert-school">Institution (if none, type N/A)</label>
+              <input id="f-tert-school" type="text" value={tertiary} onChange={(e) => setTertiary(e.target.value)} />
             </div>
             <div className="field">
-              <label>Date</label>
-              <input type="text" value={tertiaryDate} onChange={(e) => setTertiaryDate(e.target.value)} placeholder="e.g. 2010" />
+              <label htmlFor="f-tert-date">Date</label>
+              <input id="f-tert-date" type="text" value={tertiaryDate} onChange={(e) => setTertiaryDate(e.target.value)} placeholder="e.g. 2010" />
             </div>
             <div className="field">
-              <label>Certificates</label>
-              <input type="text" value={tertiaryCert} onChange={(e) => setTertiaryCert(e.target.value)} />
+              <label htmlFor="f-tert-cert">Certificates</label>
+              <input id="f-tert-cert" type="text" value={tertiaryCert} onChange={(e) => setTertiaryCert(e.target.value)} />
             </div>
           </div>
         </div>
@@ -335,23 +347,23 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
 
   function renderStep4() {
     return (
-      <div className="card">
+      <div className="card" key="step4">
         <div className="section-title">
           <span className="idx">4</span>
           <h2>Theological Education</h2>
         </div>
         <div className="grid">
           <div className="field full">
-            <label>Theological Schools Attended</label>
-            <input type="text" value={theoSchool} onChange={(e) => setTheoSchool(e.target.value)} />
+            <label htmlFor="f-theo-school">Theological Schools Attended</label>
+            <input id="f-theo-school" type="text" value={theoSchool} onChange={(e) => setTheoSchool(e.target.value)} />
           </div>
           <div className="field">
-            <label>Date</label>
-            <input type="text" value={theoDate} onChange={(e) => setTheoDate(e.target.value)} />
+            <label htmlFor="f-theo-date">Date</label>
+            <input id="f-theo-date" type="text" value={theoDate} onChange={(e) => setTheoDate(e.target.value)} />
           </div>
           <div className="field">
-            <label>Certificates</label>
-            <input type="text" value={theoCert} onChange={(e) => setTheoCert(e.target.value)} />
+            <label htmlFor="f-theo-cert">Certificates</label>
+            <input id="f-theo-cert" type="text" value={theoCert} onChange={(e) => setTheoCert(e.target.value)} />
           </div>
         </div>
       </div>
@@ -361,7 +373,17 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
   const stepRenderers = [renderStep1, renderStep2, renderStep3, renderStep4];
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
+      {/* Editing banner */}
+      {editingRecord && (
+        <div className="editing-banner">
+          <span className="banner-text">✎ Editing: {editingRecord.name}</span>
+          <button type="button" className="btn btn-ghost btn-sm banner-cancel" onClick={resetForm}>
+            Cancel
+          </button>
+        </div>
+      )}
+
       {/* Progress bar (mobile only) */}
       {isMobile && (
         <div className="step-progress">
@@ -372,9 +394,10 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
                 type="button"
                 className={`step-dot${step === i ? ' active' : ''}${step > i ? ' done' : ''}`}
                 onClick={() => setStep(i)}
+                aria-label={`Step ${s.idx}: ${s.label}`}
                 title={s.label}
               >
-                {s.idx}
+                {step > i ? '✓' : s.idx}
               </button>
             ))}
             <div

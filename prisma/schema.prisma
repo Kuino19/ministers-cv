@@ -1,0 +1,53 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String           @id @default(cuid())
+  email     String           @unique
+  name      String
+  password  String           // bcrypt hash
+  role      String           // "ADMIN" | "STAFF"
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  records   MinisterRecord[]
+}
+
+model MinisterRecord {
+  id               String   @id @default(cuid())
+  name             String
+  credentialNumber String
+  designation      String
+  designationOther String?
+  status           String
+  yearInducted     String?
+  yearLicensed     String?
+  yearOrdained     String?
+  district         String?
+  zone             String?
+  church           String?
+  dob              String?
+  email            String?
+  phone            String?
+  primarySchool    String?
+  primaryDate      String?
+  primaryCert      String?
+  secondarySchool  String?
+  secondaryDate    String?
+  secondaryCert    String?
+  tertiary         String?
+  tertiaryDate     String?
+  tertiaryCert     String?
+  theoSchool       String?
+  theoDate         String?
+  theoCert         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  createdBy        User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById      String?
+}
