@@ -10,8 +10,9 @@
   --card: #FFFFFF;
   --line: #DDD6C2;
   --danger: #8B3A3A;
-  --radius: 10px;
-  --input-bg: #FCFBF7;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-jetbrains: 'JetBrains Mono', monospace;
 }
 
 /* ===== Reset ===== */
