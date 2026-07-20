@@ -10,6 +10,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const { id } = await params;
+  const userRole = (session.user as any).role;
+  const userId = (session.user as any).id;
+
+  if (userRole === 'MINISTER' && userId !== id) {
+    return NextResponse.json({ error: 'Forbidden: You can only update your own record.' }, { status: 403 });
+  }
+
   try {
     const body = await req.json();
     const {
@@ -99,9 +106,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Record not found' }, { status: 404 });
     }
 
-    // Admins can delete any record; Staff can delete records created by themselves
-    if (userRole !== 'ADMIN' && record.createdById !== userId) {
-      return NextResponse.json({ error: 'Forbidden: You can only delete records you created.' }, { status: 403 });
+    // Only Admins can delete any record
+    if (userRole !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden: Only administrators can delete records.' }, { status: 403 });
     }
 
     await prisma.ministerRecord.delete({

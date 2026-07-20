@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
+import { MinisterRecord } from '@/lib/types';
+import { downloadWord, downloadPDF, downloadAllZIP } from '@/lib/export';
+import Roster from '@/components/Roster';
+import Tabs, { TabId } from '@/components/Tabs';
 
 interface UserItem {
   id: string;
@@ -18,9 +21,14 @@ export default function AdminPage() {
   const currentUser = session?.user as any;
 
   const [users, setUsers] = useState<UserItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [records, setRecords] = useState<MinisterRecord[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingRecords, setLoadingRecords] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
+  
+  // Custom Tabs logic for Admin (we could use the Tabs component but it was hardcoded for 'form' vs 'roster')
+  // We'll just build a simple tab switcher here.
+  const [activeTab, setActiveTab] = useState<'roster' | 'users'>('roster');
 
   // Form states for creating new user
   const [newName, setNewName] = useState('');
@@ -31,6 +39,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchUsers();
+    fetchRecords();
   }, []);
 
   async function fetchUsers() {
@@ -39,13 +48,21 @@ export default function AdminPage() {
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
-      } else {
-        setError('Failed to load users');
       }
-    } catch {
-      setError('Connection error');
     } finally {
-      setLoading(false);
+      setLoadingUsers(false);
+    }
+  }
+
+  async function fetchRecords() {
+    try {
+      const res = await fetch('/api/records');
+      if (res.ok) {
+        const data = await res.json();
+        setRecords(data);
+      }
+    } finally {
+      setLoadingRecords(false);
     }
   }
 
@@ -106,126 +123,150 @@ export default function AdminPage() {
     }
   }
 
+  async function handleDeleteRecord(id: string) {
+    try {
+      const res = await fetch(`/api/records/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast('Record deleted from database.');
+        fetchRecords();
+      } else {
+        const errData = await res.json();
+        showToast(errData.error || 'Failed to delete record.');
+      }
+    } catch {
+      showToast('Error connecting to server.');
+    }
+  }
+
+  const handleDownloadWord = useCallback((r: MinisterRecord) => {
+    downloadWord(r);
+    showToast('Word CV downloaded.');
+  }, []);
+
+  const handleDownloadPDF = useCallback(async (r: MinisterRecord) => {
+    await downloadPDF(r);
+    showToast('PDF CV downloaded.');
+  }, []);
+
+  const handleDownloadAll = useCallback(async () => {
+    await downloadAllZIP(records);
+    showToast('All CVs downloaded as ZIP.');
+  }, [records]);
+
   return (
     <div className="app">
       <header className="app-header">
         <div className="app-title">
           <div className="title-row">
-            <h1>User Management</h1>
-            <Link href="/" className="btn btn-ghost btn-sm">
-              ← Back to Register
-            </Link>
+            <h1>Admin Portal</h1>
           </div>
-          <p>Create and manage staff accounts for office access</p>
+          <p>Manage minister CV records and system accounts</p>
         </div>
       </header>
 
+      <div className="tabs" style={{ maxWidth: '1000px', margin: '0 auto 20px auto', display: 'flex', gap: '8px', padding: '0 20px' }}>
+        <button 
+          className={`tab-btn ${activeTab === 'roster' ? 'active' : ''}`}
+          onClick={() => setActiveTab('roster')}
+          style={{ flex: 1, padding: '12px', background: activeTab === 'roster' ? 'var(--primary)' : 'var(--card)', color: activeTab === 'roster' ? '#fff' : 'var(--ink)', border: '1px solid var(--line)', borderRadius: 'var(--radius)' }}
+        >
+          Minister CV Database
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+          style={{ flex: 1, padding: '12px', background: activeTab === 'users' ? 'var(--primary)' : 'var(--card)', color: activeTab === 'users' ? '#fff' : 'var(--ink)', border: '1px solid var(--line)', borderRadius: 'var(--radius)' }}
+        >
+          System Accounts
+        </button>
+      </div>
+
       {toastMsg && <div className="toast show">{toastMsg}</div>}
 
-      <div className="admin-grid">
-        {/* Create User Form */}
-        <div className="card">
-          <div className="section-title">
-            <h2>Add New Staff Account</h2>
-          </div>
-          <form onSubmit={handleCreateUser} className="admin-form">
-            <div className="field">
-              <label>Full Name *</label>
-              <input
-                type="text"
-                placeholder="e.g. Samuel Ade"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                required
-              />
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
+        {activeTab === 'roster' && (
+          <Roster
+            records={records}
+            onEdit={() => alert('Admins view/export only. Ministers edit their own records via the main landing page.')}
+            onDelete={handleDeleteRecord}
+            onDownloadWord={handleDownloadWord}
+            onDownloadPDF={handleDownloadPDF}
+            onDownloadAll={handleDownloadAll}
+            showToast={showToast}
+          />
+        )}
+
+        {activeTab === 'users' && (
+          <div className="admin-grid" style={{ gridTemplateColumns: '1fr', maxWidth: '800px', margin: '0 auto' }}>
+            <div className="card">
+              <div className="section-title">
+                <h2>Add New Admin/Staff</h2>
+              </div>
+              <form onSubmit={handleCreateUser} className="admin-form">
+                <div className="field">
+                  <label>Full Name *</label>
+                  <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Email Address *</label>
+                  <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Password *</label>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Role</label>
+                  <select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
+                    <option value="ADMIN">ADMIN</option>
+                  </select>
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Creating…' : 'Create User'}
+                </button>
+              </form>
             </div>
 
-            <div className="field">
-              <label>Email Address *</label>
-              <input
-                type="email"
-                placeholder="s.ade@church.org"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label>Password *</label>
-              <input
-                type="password"
-                placeholder="Initial password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label>Role</label>
-              <select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
-                <option value="STAFF">STAFF (Can add/edit records)</option>
-                <option value="ADMIN">ADMIN (Full access + manage users)</option>
-              </select>
-            </div>
-
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create User Account'}
-            </button>
-          </form>
-        </div>
-
-        {/* Existing Users List */}
-        <div className="card">
-          <div className="section-title">
-            <h2>System Accounts</h2>
-          </div>
-          {loading ? (
-            <p>Loading accounts…</p>
-          ) : error ? (
-            <p className="field-error">{error}</p>
-          ) : (
-            <table className="user-table">
-              <thead>
-                <tr>
-                  <th>Name &amp; Email</th>
-                  <th>Role</th>
-                  <th>Records</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      <div className="u-name">{u.name}</div>
-                      <div className="u-email">{u.email}</div>
-                    </td>
-                    <td>
-                      <span className={`role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-staff'}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td>{u._count?.records ?? 0}</td>
-                    <td>
-                      {u.id !== currentUser?.id ? (
-                        <button
-                          className="btn btn-ghost btn-sm btn-danger-hover"
-                          onClick={() => handleDeleteUser(u)}
-                        >
-                          Delete
-                        </button>
-                      ) : (
-                        <span className="u-current">(You)</span>
-                      )}
-                    </td>
+            <div className="card" style={{ marginTop: '24px' }}>
+              <div className="section-title">
+                <h2>System Accounts</h2>
+              </div>
+              <table className="user-table">
+                <thead>
+                  <tr>
+                    <th>Name &amp; Email</th>
+                    <th>Role</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="u-name">{u.name}</div>
+                        <div className="u-email">{u.email}</div>
+                      </td>
+                      <td>
+                        <span className={`role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-staff'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td>
+                        {u.id !== currentUser?.id ? (
+                          <button className="btn btn-ghost btn-sm btn-danger-hover" onClick={() => handleDeleteUser(u)}>
+                            Delete
+                          </button>
+                        ) : (
+                          <span className="u-current">(You)</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

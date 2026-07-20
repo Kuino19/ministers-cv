@@ -1,36 +1,47 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 import { MinisterRecord } from '@/lib/types';
-import { downloadWord, downloadPDF, downloadAllZIP } from '@/lib/export';
-
 import Header from '@/components/Header';
-import Tabs, { TabId } from '@/components/Tabs';
 import CVForm from '@/components/CVForm';
-import Roster from '@/components/Roster';
 import Toast from '@/components/Toast';
 
 export default function Home() {
-  const [records, setRecords] = useState<MinisterRecord[]>([]);
+  const { data: session, status } = useSession();
+  const [record, setRecord] = useState<MinisterRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabId>('form');
-  const [editingRecord, setEditingRecord] = useState<MinisterRecord | null>(null);
   const [toastMsg, setToastMsg] = useState('');
 
-  // Fetch records from API on mount
-  useEffect(() => {
-    fetchRecords();
-  }, []);
+  // Login Form State
+  const [name, setName] = useState('');
+  const [credentialNumber, setCredentialNumber] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  async function fetchRecords() {
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      if ((session.user as any).role === 'ADMIN') {
+        window.location.href = '/admin';
+      } else {
+        fetchMyRecord();
+      }
+    } else if (status === 'unauthenticated') {
+      setLoading(false);
+    }
+  }, [status, session]);
+
+  async function fetchMyRecord() {
     setLoading(true);
     try {
       const res = await fetch('/api/records');
       if (res.ok) {
         const data = await res.json();
-        setRecords(data);
+        if (data && data.length > 0) {
+          setRecord(data[0]);
+        }
       } else {
-        showToast('Failed to load database records.');
+        showToast('Failed to load your profile.');
       }
     } catch {
       showToast('Error connecting to backend database.');
@@ -45,7 +56,6 @@ export default function Home() {
 
   async function handleSave(data: Omit<MinisterRecord, 'id'> & { id?: string }) {
     if (data.id) {
-      // Update existing record via API
       try {
         const res = await fetch(`/api/records/${data.id}`, {
           method: 'PUT',
@@ -54,106 +64,103 @@ export default function Home() {
         });
 
         if (res.ok) {
-          showToast('Record updated in database.');
-          fetchRecords();
+          showToast('Profile updated successfully.');
+          fetchMyRecord();
         } else {
           const errData = await res.json();
-          showToast(errData.error || 'Failed to update record.');
+          showToast(errData.error || 'Failed to update profile.');
         }
       } catch {
         showToast('Error connecting to server.');
       }
+    }
+  }
+
+  const handleMinisterLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+
+    const credentialRegex = /^FGCN\/\d{4}\/\d{4}\/[a-zA-Z]{3}$/;
+    if (!credentialRegex.test(credentialNumber)) {
+      setLoginError('Invalid format. Expected: FGCN/0000/0000/XXX');
+      return;
+    }
+
+    setIsLoggingIn(true);
+    const res = await signIn('minister-login', {
+      redirect: false,
+      name,
+      credentialNumber,
+    });
+
+    if (res?.error) {
+      setLoginError(res.error);
+      setIsLoggingIn(false);
     } else {
-      // Create new record via API
-      try {
-        const res = await fetch('/api/records', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-
-        if (res.ok) {
-          showToast('Record saved to office database.');
-          fetchRecords();
-        } else {
-          const errData = await res.json();
-          showToast(errData.error || 'Failed to save record.');
-        }
-      } catch {
-        showToast('Error connecting to server.');
-      }
+      // successful login triggers session update which runs useEffect
     }
-    setEditingRecord(null);
-    setActiveTab('roster');
+  };
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="app">
+        <Header recordCount={0} />
+        <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>
+      </div>
+    );
   }
 
-  function handleEdit(record: MinisterRecord) {
-    setEditingRecord(record);
-    setActiveTab('form');
+  if (status === 'unauthenticated') {
+    return (
+      <div className="app">
+        <Header recordCount={0} />
+        <div className="login-container" style={{ maxWidth: '400px', margin: '40px auto', padding: '20px', background: 'var(--card)', borderRadius: 'var(--radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <h2 style={{ fontFamily: 'var(--font-playfair)', color: 'var(--primary)', marginBottom: '20px', textAlign: 'center' }}>Minister Login</h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-soft)', marginBottom: '24px', textAlign: 'center' }}>
+            Enter your name and credential number to manage your CV.
+          </p>
+          <form onSubmit={handleMinisterLogin}>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label>Full Name</label>
+              <input 
+                type="text" 
+                value={name} 
+                onChange={e => setName(e.target.value)} 
+                required 
+                placeholder="John Doe"
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label>Credential Number</label>
+              <input 
+                type="text" 
+                value={credentialNumber} 
+                onChange={e => setCredentialNumber(e.target.value.toUpperCase())} 
+                required 
+                placeholder="FGCN/2222/2026/OSD"
+              />
+            </div>
+            {loginError && <p style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '16px' }}>{loginError}</p>}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isLoggingIn}>
+              {isLoggingIn ? 'Verifying...' : 'Access My Profile'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
   }
-
-  async function handleDelete(id: string) {
-    try {
-      const res = await fetch(`/api/records/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        showToast('Record deleted from database.');
-        fetchRecords();
-      } else {
-        const errData = await res.json();
-        showToast(errData.error || 'Failed to delete record.');
-      }
-    } catch {
-      showToast('Error connecting to server.');
-    }
-  }
-
-  function handleClear() {
-    setEditingRecord(null);
-  }
-
-  const handleDownloadWord = useCallback((r: MinisterRecord) => {
-    downloadWord(r);
-    showToast('Word CV downloaded.');
-  }, []);
-
-  const handleDownloadPDF = useCallback(async (r: MinisterRecord) => {
-    await downloadPDF(r);
-    showToast('PDF CV downloaded.');
-  }, []);
-
-  const handleDownloadAll = useCallback(async () => {
-    await downloadAllZIP(records);
-    showToast('All CVs downloaded as ZIP.');
-  }, [records]);
 
   return (
     <div className="app">
-      <Header recordCount={records.length} />
-      <Tabs activeTab={activeTab} onSwitch={setActiveTab} />
-
-      {activeTab === 'form' && (
+      <Header recordCount={0} />
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+        <h2 style={{ fontFamily: 'var(--font-playfair)', color: 'var(--primary)', marginBottom: '24px' }}>My CV Profile</h2>
         <CVForm
-          editingRecord={editingRecord}
+          editingRecord={record}
           onSave={handleSave}
-          onClear={handleClear}
+          onClear={() => {}}
         />
-      )}
-
-      {activeTab === 'roster' && (
-        <Roster
-          records={records}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onDownloadWord={handleDownloadWord}
-          onDownloadPDF={handleDownloadPDF}
-          onDownloadAll={handleDownloadAll}
-          showToast={showToast}
-        />
-      )}
-
+      </div>
       <Toast message={toastMsg} onDone={() => setToastMsg('')} />
     </div>
   );

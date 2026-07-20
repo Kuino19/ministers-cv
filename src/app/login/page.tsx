@@ -21,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const res = await signIn('credentials', {
+    const res = await signIn('admin-login', {
       email,
       password,
       redirect: false,
@@ -31,7 +31,7 @@ export default function LoginPage() {
       setError(res.error || 'Invalid credentials');
       setLoading(false);
     } else {
-      router.push('/');
+      router.push('/admin');
       router.refresh();
     }
   }
@@ -41,8 +41,8 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-header">
           <div className="login-seal">M</div>
-          <h1>Minister&rsquo;s CV Register</h1>
-          <p>Sign in to access office-wide records</p>
+          <h1>Admin Portal</h1>
+          <p>Sign in to manage ministers' CV records</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">

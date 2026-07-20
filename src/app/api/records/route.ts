@@ -10,6 +10,16 @@ export async function GET() {
   }
 
   try {
+    const userRole = (session.user as any).role;
+    const userId = (session.user as any).id;
+
+    if (userRole === 'MINISTER') {
+      const records = await prisma.ministerRecord.findMany({
+        where: { id: userId },
+      });
+      return NextResponse.json(records);
+    }
+
     const records = await prisma.ministerRecord.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -30,6 +40,11 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const userRole = (session.user as any).role;
+  if (userRole !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
