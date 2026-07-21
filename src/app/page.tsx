@@ -127,7 +127,7 @@ export default function Home() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <div className="login-seal">M</div>
+            <img src="/logo.png" alt="Foursquare Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '16px' }} />
             <h1>Minister Login</h1>
             <p>Enter your name and credential number to manage your CV.</p>
           </div>

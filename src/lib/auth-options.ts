@@ -64,13 +64,14 @@ export const authOptions: NextAuthOptions = {
         const name = credentials.name.trim();
         const credentialNumber = credentials.credentialNumber.trim().toUpperCase();
 
+        const inputCredentialNormalized = credentialNumber.replace(/[^A-Z0-9]/g, '');
+
         // Validate format removed per user request: allow any format
         // Check if minister exists
         let minister;
         try {
-          minister = await prisma.ministerRecord.findFirst({
-            where: { credentialNumber },
-          });
+          const allMinisters = await prisma.ministerRecord.findMany();
+          minister = allMinisters.find(m => m.credentialNumber.toUpperCase().replace(/[^A-Z0-9]/g, '') === inputCredentialNormalized);
         } catch (e) {
           console.error("Prisma error:", e);
           throw new Error('Database connection failed. Please verify your internet connection or backend status.');
