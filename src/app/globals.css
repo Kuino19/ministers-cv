@@ -277,12 +277,14 @@ body {
   transition: all 0.15s ease;
 }
 
-.radio-opt:has(input[type="radio"]:checked) {
+.radio-opt:has(input[type="radio"]:checked),
+.radio-opt:has(input[type="checkbox"]:checked) {
   border-color: var(--primary);
   background: #eff6ff;
 }
 
-.radio-opt input[type="radio"] {
+.radio-opt input[type="radio"],
+.radio-opt input[type="checkbox"] {
   accent-color: var(--primary);
   width: 16px;
   height: 16px;

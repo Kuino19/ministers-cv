@@ -210,19 +210,29 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           )}
           <div className="field full">
             <label>Status <span className="req">*</span></label>
-            <div className="radio-row" role="radiogroup" aria-label="Ministerial Status">
-              {['Ordained', 'Licensed', 'Exhorter'].map((s) => (
-                <label className={`radio-opt${status === s ? ' radio-opt-checked' : ''}`} key={s}>
-                  <input
-                    type="radio"
-                    name="status"
-                    value={s}
-                    checked={status === s}
-                    onChange={() => { setStatus(s); if (errors.status) setErrors(prev => ({...prev, status: ''})); }}
-                  />
-                  <span>{s}</span>
-                </label>
-              ))}
+            <div className="radio-row" role="group" aria-label="Ministerial Status">
+              {['Ordained', 'Licensed', 'Exhorter'].map((s) => {
+                const isChecked = status.includes(s);
+                return (
+                  <label className={`radio-opt${isChecked ? ' radio-opt-checked' : ''}`} key={s}>
+                    <input
+                      type="checkbox"
+                      name="status"
+                      value={s}
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const currentList = status.split(',').map(x => x.trim()).filter(Boolean);
+                        const newList = e.target.checked 
+                          ? [...currentList, s] 
+                          : currentList.filter(x => x !== s);
+                        setStatus(newList.join(', '));
+                        if (errors.status) setErrors(prev => ({...prev, status: ''}));
+                      }}
+                    />
+                    <span>{s}</span>
+                  </label>
+                );
+              })}
             </div>
             {errors.status && <span className="field-error">{errors.status}</span>}
           </div>

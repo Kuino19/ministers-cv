@@ -240,39 +240,41 @@ export default function AdminPage() {
               <div className="section-title">
                 <h2>System Accounts</h2>
               </div>
-              <table className="user-table">
-                <thead>
-                  <tr>
-                    <th>Name &amp; Email</th>
-                    <th>Role</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td>
-                        <div className="u-name">{u.name}</div>
-                        <div className="u-email">{u.email}</div>
-                      </td>
-                      <td>
-                        <span className={`role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-staff'}`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td>
-                        {u.id !== currentUser?.id ? (
-                          <button className="btn btn-ghost btn-sm btn-danger-hover" onClick={() => handleDeleteUser(u)}>
-                            Delete
-                          </button>
-                        ) : (
-                          <span className="u-current">(You)</span>
-                        )}
-                      </td>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="user-table">
+                  <thead>
+                    <tr>
+                      <th>Name &amp; Email</th>
+                      <th>Role</th>
+                      <th>Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.id}>
+                        <td>
+                          <div className="u-name">{u.name}</div>
+                          <div className="u-email">{u.email}</div>
+                        </td>
+                        <td>
+                          <span className={`role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-staff'}`}>
+                            {u.role}
+                          </span>
+                        </td>
+                        <td>
+                          {u.id !== currentUser?.id ? (
+                            <button className="btn btn-ghost btn-sm btn-danger-hover" onClick={() => handleDeleteUser(u)}>
+                              Delete
+                            </button>
+                          ) : (
+                            <span className="u-current">(You)</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
