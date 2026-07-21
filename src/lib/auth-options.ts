@@ -21,9 +21,15 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password are required.');
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        });
+        let user;
+        try {
+          user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase().trim() },
+          });
+        } catch (e) {
+          console.error("Prisma error:", e);
+          throw new Error('Database connection failed. Please verify your internet connection.');
+        }
 
         if (!user) {
           throw new Error('Invalid email or password.');
@@ -66,9 +72,15 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Check if minister exists
-        let minister = await prisma.ministerRecord.findFirst({
-          where: { credentialNumber },
-        });
+        let minister;
+        try {
+          minister = await prisma.ministerRecord.findFirst({
+            where: { credentialNumber },
+          });
+        } catch (e) {
+          console.error("Prisma error:", e);
+          throw new Error('Database connection failed. Please verify your internet connection or backend status.');
+        }
 
         if (minister) {
           // If exists, verify name (case-insensitive check or just rough match)
@@ -77,14 +89,19 @@ export const authOptions: NextAuthOptions = {
           }
         } else {
           // Create new shell record
-          minister = await prisma.ministerRecord.create({
-            data: {
-              name: name,
-              credentialNumber: credentialNumber,
-              designation: '', // Required by schema
-              status: 'Active', // Default status or empty
-            },
-          });
+          try {
+            minister = await prisma.ministerRecord.create({
+              data: {
+                name: name,
+                credentialNumber: credentialNumber,
+                designation: '', // Required by schema
+                status: 'Active', // Default status or empty
+              },
+            });
+          } catch (e) {
+            console.error("Prisma create error:", e);
+            throw new Error('Failed to register profile. Database connection failed.');
+          }
         }
 
         return {
