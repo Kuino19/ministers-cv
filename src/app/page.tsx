@@ -152,7 +152,7 @@ export default function Home() {
                 value={credentialNumber} 
                 onChange={e => setCredentialNumber(e.target.value.toUpperCase())} 
                 required 
-                placeholder="e.g. FGCN/2222/2026/OSD or any format"
+                placeholder="Enter your credential number"
               />
             </div>
             

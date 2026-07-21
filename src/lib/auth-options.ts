@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
       name: 'Minister Login',
       credentials: {
         name: { label: 'Full Name', type: 'text', placeholder: 'John Doe' },
-        credentialNumber: { label: 'Credential Number', type: 'text', placeholder: 'FGCN/2222/2026/OSD' },
+        credentialNumber: { label: 'Credential Number', type: 'text', placeholder: 'Enter your credential number' },
       },
       async authorize(credentials) {
         if (!credentials?.name || !credentials?.credentialNumber) {
@@ -77,8 +77,10 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (minister) {
-          // If exists, verify name (case-insensitive check or just rough match)
-          if (minister.name.toLowerCase() !== name.toLowerCase()) {
+          // If exists, verify name very loosely (ignore case, spaces, and punctuation)
+          const dbName = minister.name.toLowerCase().replace(/[^a-z]/g, '');
+          const inputName = name.toLowerCase().replace(/[^a-z]/g, '');
+          if (dbName !== inputName && !dbName.includes(inputName) && !inputName.includes(dbName)) {
             throw new Error('Name does not match our records for this Credential Number.');
           }
         } else {
