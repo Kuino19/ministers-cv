@@ -41,8 +41,11 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
-          setRecord(data[0]);
-          setViewMode(true);
+          const rec = data[0];
+          setRecord(rec);
+          // Check if profile has actually been filled out (beyond the initial shell creation)
+          const isComplete = Boolean(rec.phone || rec.email || rec.dob || rec.district);
+          setViewMode(isComplete);
         }
       } else {
         showToast('Failed to load your profile.');
