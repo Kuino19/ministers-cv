@@ -40,7 +40,7 @@ export default function LoginPage() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-seal">M</div>
+          <img src="/logo.png" alt="Foursquare Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '16px' }} />
           <h1>Admin Portal</h1>
           <p>Sign in to manage ministers' CV records</p>
         </div>
