@@ -413,7 +413,6 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
             <input id="f-theo-cert" type="text" value={theoCert} onChange={(e) => setTheoCert(e.target.value)} />
           </div>
         </div>
-        </div>
       </div>
     );
   }
