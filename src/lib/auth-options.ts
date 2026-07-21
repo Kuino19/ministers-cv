@@ -64,13 +64,7 @@ export const authOptions: NextAuthOptions = {
         const name = credentials.name.trim();
         const credentialNumber = credentials.credentialNumber.trim().toUpperCase();
 
-        // Validate format: FGCN/XXXX/XXXX/XXX (X=digit or letter depending on position)
-        // Format: ^FGCN/\d{4}/\d{4}/[A-Z]{3}$
-        const credentialRegex = /^FGCN\/\d{4}\/\d{4}\/[A-Z]{3}$/;
-        if (!credentialRegex.test(credentialNumber)) {
-          throw new Error('Invalid Credential Number format. Must be like FGCN/2222/2026/OSD');
-        }
-
+        // Validate format removed per user request: allow any format
         // Check if minister exists
         let minister;
         try {

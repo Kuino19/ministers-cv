@@ -46,6 +46,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       theoSchool,
       theoDate,
       theoCert,
+      profCert,
+      otherAppointments,
+      houseAddress,
+      certificateUrls,
     } = body;
 
     const updated = await prisma.ministerRecord.update({
@@ -77,6 +81,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         theoSchool,
         theoDate,
         theoCert,
+        profCert,
+        otherAppointments,
+        houseAddress,
+        certificateUrls,
       },
     });
 

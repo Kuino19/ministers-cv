@@ -47,6 +47,10 @@ model MinisterRecord {
   theoSchool       String?
   theoDate         String?
   theoCert         String?
+  profCert         String?
+  otherAppointments String?
+  houseAddress     String?
+  certificateUrls  String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   createdBy        User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)

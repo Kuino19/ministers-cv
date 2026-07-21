@@ -76,6 +76,10 @@ export async function POST(req: Request) {
       theoSchool,
       theoDate,
       theoCert,
+      profCert,
+      otherAppointments,
+      houseAddress,
+      certificateUrls,
     } = body;
 
     if (!name || !credentialNumber || !designation || !status) {
@@ -112,6 +116,10 @@ export async function POST(req: Request) {
         theoSchool,
         theoDate,
         theoCert,
+        profCert,
+        otherAppointments,
+        houseAddress,
+        certificateUrls,
         createdById: userId || null,
       },
     });

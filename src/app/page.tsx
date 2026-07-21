@@ -88,12 +88,6 @@ export default function Home() {
     e.preventDefault();
     setLoginError('');
 
-    const credentialRegex = /^FGCN\/\d{4}\/\d{4}\/[a-zA-Z]{3}$/;
-    if (!credentialRegex.test(credentialNumber)) {
-      setLoginError('Invalid format. Expected: FGCN/0000/0000/XXX');
-      return;
-    }
-
     setIsLoggingIn(true);
     const res = await signIn('minister-login', {
       redirect: false,
@@ -158,7 +152,7 @@ export default function Home() {
                 value={credentialNumber} 
                 onChange={e => setCredentialNumber(e.target.value.toUpperCase())} 
                 required 
-                placeholder="FGCN/2222/2026/OSD"
+                placeholder="e.g. FGCN/2222/2026/OSD or any format"
               />
             </div>
             

@@ -26,6 +26,10 @@ export interface MinisterRecord {
   theoSchool: string;
   theoDate: string;
   theoCert: string;
+  profCert: string;
+  otherAppointments: string;
+  houseAddress: string;
+  certificateUrls: string;
 }
 
 export const FIELD_KEYS: (keyof Omit<MinisterRecord, 'id' | 'status'>)[] = [
@@ -37,4 +41,5 @@ export const FIELD_KEYS: (keyof Omit<MinisterRecord, 'id' | 'status'>)[] = [
   'secondarySchool', 'secondaryDate', 'secondaryCert',
   'tertiary', 'tertiaryDate', 'tertiaryCert',
   'theoSchool', 'theoDate', 'theoCert',
+  'profCert', 'otherAppointments', 'houseAddress', 'certificateUrls',
 ];

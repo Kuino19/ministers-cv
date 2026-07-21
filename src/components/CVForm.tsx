@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { MinisterRecord } from '@/lib/types';
+import { UploadButton } from '@/lib/uploadthing';
 
 interface CVFormProps {
   editingRecord: MinisterRecord | null;
@@ -47,6 +48,12 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
   const [theoSchool, setTheoSchool] = useState('');
   const [theoDate, setTheoDate] = useState('');
   const [theoCert, setTheoCert] = useState('');
+  
+  // New fields
+  const [profCert, setProfCert] = useState('');
+  const [otherAppointments, setOtherAppointments] = useState('');
+  const [houseAddress, setHouseAddress] = useState('');
+  const [certificateUrls, setCertificateUrls] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -85,6 +92,10 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
       setTheoSchool(editingRecord.theoSchool || '');
       setTheoDate(editingRecord.theoDate || '');
       setTheoCert(editingRecord.theoCert || '');
+      setProfCert(editingRecord.profCert || '');
+      setOtherAppointments(editingRecord.otherAppointments || '');
+      setHouseAddress(editingRecord.houseAddress || '');
+      setCertificateUrls(editingRecord.certificateUrls || '');
       setStep(0);
       // Scroll to top when editing
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -100,6 +111,7 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
     setSecondarySchool(''); setSecondaryDate(''); setSecondaryCert('');
     setTertiary(''); setTertiaryDate(''); setTertiaryCert('');
     setTheoSchool(''); setTheoDate(''); setTheoCert('');
+    setProfCert(''); setOtherAppointments(''); setHouseAddress(''); setCertificateUrls('');
     setErrors({});
     setStep(0);
     onClear();
@@ -138,6 +150,7 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
       secondarySchool, secondaryDate, secondaryCert,
       tertiary, tertiaryDate, tertiaryCert,
       theoSchool, theoDate, theoCert,
+      profCert, otherAppointments, houseAddress, certificateUrls,
     });
     resetForm();
   }
@@ -236,6 +249,16 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
             </div>
             {errors.status && <span className="field-error">{errors.status}</span>}
           </div>
+          <div className="field full">
+            <label htmlFor="f-other-appointments">Other Notable Ministerial Appointments</label>
+            <textarea
+              id="f-other-appointments"
+              value={otherAppointments}
+              onChange={(e) => setOtherAppointments(e.target.value)}
+              placeholder="List any other notable appointments here..."
+              rows={3}
+            />
+          </div>
           <div className="field">
             <label htmlFor="f-year-inducted">Year Inducted</label>
             <input id="f-year-inducted" type="text" value={yearInducted} onChange={(e) => setYearInducted(e.target.value)} placeholder="YYYY" inputMode="numeric" maxLength={4} />
@@ -284,6 +307,10 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           <div className="field">
             <label htmlFor="f-phone">Phone</label>
             <input id="f-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234…" autoComplete="tel" />
+          </div>
+          <div className="field full">
+            <label htmlFor="f-address">House Address</label>
+            <textarea id="f-address" value={houseAddress} onChange={(e) => setHouseAddress(e.target.value)} rows={2} />
           </div>
         </div>
       </div>
@@ -350,6 +377,14 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
               <input id="f-tert-cert" type="text" value={tertiaryCert} onChange={(e) => setTertiaryCert(e.target.value)} />
             </div>
           </div>
+        <div className="edu-row" style={{ marginBottom: 0 }}>
+          <span className="edu-row-label">Professional Certification</span>
+          <div className="grid">
+            <div className="field full">
+              <label htmlFor="f-prof-cert">Certifications</label>
+              <input id="f-prof-cert" type="text" value={profCert} onChange={(e) => setProfCert(e.target.value)} placeholder="e.g. ICAN, CIPM..." />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -374,6 +409,39 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
           <div className="field">
             <label htmlFor="f-theo-cert">Certificates</label>
             <input id="f-theo-cert" type="text" value={theoCert} onChange={(e) => setTheoCert(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="edu-row" style={{ marginTop: '24px', marginBottom: 0 }}>
+          <span className="edu-row-label">Upload Certificates</span>
+          <p style={{ fontSize: '13px', color: 'var(--ink-soft)', marginBottom: '12px' }}>
+            Upload scans or photos of your certificates (Max 4MB each, up to 4 files).
+          </p>
+          <div style={{ padding: '16px', background: 'var(--input-bg)', borderRadius: '8px', border: '1px dashed var(--line)' }}>
+            <UploadButton
+              endpoint="certificateUploader"
+              onClientUploadComplete={(res) => {
+                if (res) {
+                  const newUrls = res.map(f => f.url);
+                  const currentUrls = certificateUrls ? certificateUrls.split(',') : [];
+                  setCertificateUrls([...currentUrls, ...newUrls].join(','));
+                  alert("Upload Completed successfully");
+                }
+              }}
+              onUploadError={(error: Error) => {
+                alert(`ERROR! ${error.message}`);
+              }}
+            />
+            {certificateUrls && (
+              <div style={{ marginTop: '16px', fontSize: '13px' }}>
+                <strong>Uploaded ({certificateUrls.split(',').length} file(s)):</strong>
+                <ul style={{ margin: '8px 0 0', paddingLeft: '20px' }}>
+                  {certificateUrls.split(',').map((url, i) => (
+                    <li key={i}><a href={url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>View File {i + 1}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

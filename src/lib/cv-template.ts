@@ -43,8 +43,15 @@ export function cvHTML(r: MinisterRecord): string {
   return `
   <div style="font-family:'Inter', 'Arial', sans-serif; color:#1B2A20; width:100%; max-width:750px; margin:0 auto; padding:48px 48px; background:#ffffff; box-sizing:border-box; line-height:1.5;">
     
+    <!-- FOURSQUARE HEADER -->
+    <div style="border-bottom:2.5px solid #1F4D36; padding-bottom:16px; margin-bottom:24px; text-align:center;">
+      <img src="/logo.png" alt="FOURSQUARE LOGO" style="max-height: 80px; margin-bottom: 8px;" />
+      <h2 style="font-family:Georgia, serif; font-size:20px; font-weight:bold; color:#1F4D36; margin:0 0 4px 0; text-transform:uppercase;">FOURSQUARE GOSPEL CHURCH IN NIGERIA</h2>
+      <h3 style="font-family:Georgia, serif; font-size:16px; font-weight:bold; color:#A2792B; margin:0 0 16px 0; text-transform:uppercase;">MINISTERIAL CV</h3>
+    </div>
+    
     <!-- CV TITLE & NAME HEADER -->
-    <div style="border-bottom:2.5px solid #1F4D36; padding-bottom:16px; margin-bottom:24px;">
+    <div style="margin-bottom:24px;">
       <div style="display:table; width:100%;">
         <div style="display:table-cell; vertical-align:top;">
           <h1 style="font-family:Georgia, serif; font-size:28px; font-weight:bold; color:#123021; margin:0 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">
@@ -59,6 +66,7 @@ export function cvHTML(r: MinisterRecord): string {
             ${r.email ? '<strong>Email:</strong> ' + esc(r.email) : ''}
             ${(r.phone || r.email) && r.dob ? ' &nbsp;|&nbsp; ' : ''}
             ${r.dob ? '<strong>DOB:</strong> ' + esc(r.dob) : ''}
+            ${r.houseAddress ? '<br/><strong>Address:</strong> ' + esc(r.houseAddress) : ''}
           </div>
         </div>
         <div style="display:table-cell; vertical-align:top; text-align:right; width:180px;">
@@ -116,6 +124,10 @@ export function cvHTML(r: MinisterRecord): string {
             <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Zonal Jurisdiction:</td>
             <td style="padding:4px 0; color:#123021;">${r.zone ? esc(r.zone) + ' Zone' : '—'}</td>
           </tr>
+          ${r.otherAppointments ? `<tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Other Appointments:</td>
+            <td style="padding:4px 0; color:#123021;">${esc(r.otherAppointments)}</td>
+          </tr>` : ''}
         </tbody>
       </table>
     </div>
@@ -135,6 +147,10 @@ export function cvHTML(r: MinisterRecord): string {
           </tr>
         </thead>
         <tbody>
+          ${r.profCert ? `<tr>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2; font-weight:600; color:#4A5A4E;">Professional</td>
+            <td style="padding:6px 10px; border:1px solid #DDD6C2;" colspan="3">${esc(r.profCert)}</td>
+          </tr>` : ''}
           <tr>
             <td style="padding:6px 10px; border:1px solid #DDD6C2; font-weight:600; color:#4A5A4E;">Tertiary</td>
             <td style="padding:6px 10px; border:1px solid #DDD6C2;">${esc(val(r.tertiary))}</td>
@@ -176,6 +192,14 @@ export function cvHTML(r: MinisterRecord): string {
             <td style="padding:4px 0; color:#4A5A4E; font-weight:500;">Qualifications Obtained:</td>
             <td style="padding:4px 0; color:#123021;">${esc(val(r.theoCert))}</td>
           </tr>
+          ${r.certificateUrls ? `<tr>
+            <td style="padding:4px 0; color:#4A5A4E; font-weight:500; vertical-align:top;">Attached Certificates:</td>
+            <td style="padding:4px 0; color:#123021;">
+              <ul style="margin:0; padding-left:16px;">
+                ${r.certificateUrls.split(',').map(url => `<li><a href="${esc(url)}" target="_blank">${esc(url)}</a></li>`).join('')}
+              </ul>
+            </td>
+          </tr>` : ''}
         </tbody>
       </table>
     </div>
