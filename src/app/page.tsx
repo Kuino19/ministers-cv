@@ -112,15 +112,17 @@ export default function Home() {
 
   if (status === 'unauthenticated') {
     return (
-      <div className="app">
-        <Header recordCount={0} />
-        <div className="login-container" style={{ maxWidth: '400px', margin: '40px auto', padding: '20px', background: 'var(--card)', borderRadius: 'var(--radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-          <h2 style={{ fontFamily: 'var(--font-playfair)', color: 'var(--primary)', marginBottom: '20px', textAlign: 'center' }}>Minister Login</h2>
-          <p style={{ fontSize: '14px', color: 'var(--ink-soft)', marginBottom: '24px', textAlign: 'center' }}>
-            Enter your name and credential number to manage your CV.
-          </p>
-          <form onSubmit={handleMinisterLogin}>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-header">
+            <div className="login-seal">M</div>
+            <h1>Minister Login</h1>
+            <p>Enter your name and credential number to manage your CV.</p>
+          </div>
+          <form onSubmit={handleMinisterLogin} className="login-form">
+            {loginError && <div className="login-error">{loginError}</div>}
+            
+            <div className="field">
               <label>Full Name</label>
               <input 
                 type="text" 
@@ -130,7 +132,8 @@ export default function Home() {
                 placeholder="John Doe"
               />
             </div>
-            <div className="form-group" style={{ marginBottom: '24px' }}>
+            
+            <div className="field">
               <label>Credential Number</label>
               <input 
                 type="text" 
@@ -140,8 +143,8 @@ export default function Home() {
                 placeholder="FGCN/2222/2026/OSD"
               />
             </div>
-            {loginError && <p style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '16px' }}>{loginError}</p>}
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isLoggingIn}>
+            
+            <button type="submit" className="btn btn-primary login-btn" disabled={isLoggingIn}>
               {isLoggingIn ? 'Verifying...' : 'Access My Profile'}
             </button>
           </form>
