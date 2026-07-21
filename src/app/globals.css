@@ -1,15 +1,20 @@
 /* ===== Design Tokens ===== */
 :root {
-  --bg: #F5F2E8;
-  --ink: #1B2A20;
-  --ink-soft: #4A5A4E;
-  --primary: #1F4D36;
-  --primary-dark: #123021;
-  --gold: #A2792B;
-  --gold-soft: #C9A25C;
-  --card: #FFFFFF;
-  --line: #DDD6C2;
-  --danger: #8B3A3A;
+  --bg: #f0f4f8;             /* Soft blue-gray background */
+  --card: #ffffff;           /* Clean white cards */
+  --input-bg: #f8fafc;       /* Very light slate for inputs */
+  --ink: #0f172a;            /* Deep navy text */
+  --ink-soft: #475569;       /* Muted slate text */
+  
+  --primary: #2563eb;        /* Vibrant Royal Blue */
+  --primary-dark: #1e3a8a;   /* Deep Navy */
+  
+  --gold: #d97706;           /* Rich Amber/Gold */
+  --gold-soft: #f59e0b;      /* Bright Amber */
+  
+  --line: #e2e8f0;           /* Soft dividers */
+  --danger: #dc2626;         /* Bright red for errors */
+  
   --font-playfair: 'Playfair Display', Georgia, serif;
   --font-inter: 'Inter', system-ui, sans-serif;
   --font-jetbrains: 'JetBrains Mono', monospace;
@@ -236,7 +241,7 @@ body {
 .field input:focus,
 .field select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(31,77,54,0.12);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
 }
 
 .field input.input-error,
@@ -274,7 +279,7 @@ body {
 
 .radio-opt:has(input[type="radio"]:checked) {
   border-color: var(--primary);
-  background: #EDF5F0;
+  background: #eff6ff;
 }
 
 .radio-opt input[type="radio"] {
