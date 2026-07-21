@@ -377,6 +377,7 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
               <input id="f-tert-cert" type="text" value={tertiaryCert} onChange={(e) => setTertiaryCert(e.target.value)} />
             </div>
           </div>
+        </div>
         <div className="edu-row" style={{ marginBottom: 0 }}>
           <span className="edu-row-label">Professional Certification</span>
           <div className="grid">
