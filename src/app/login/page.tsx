@@ -79,7 +79,16 @@ export default function LoginPage() {
         </form>
 
         <div className="login-footer">
-          Default Admin: <code>admin@church.org</code> / <code>changeme123</code>
+          <p>Default Admin: <code>admin@church.org</code> / <code>changeme123</code></p>
+          <div style={{ marginTop: '16px' }}>
+            <button 
+              type="button" 
+              className="btn btn-ghost btn-sm" 
+              onClick={() => router.push('/')}
+            >
+              ← Go to Minister Login
+            </button>
+          </div>
         </div>
       </div>
     </div>

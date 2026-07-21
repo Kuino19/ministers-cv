@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { MinisterRecord } from '@/lib/types';
 import { downloadWord, downloadPDF, downloadAllZIP } from '@/lib/export';
 import Roster from '@/components/Roster';
@@ -159,6 +159,15 @@ export default function AdminPage() {
         <div className="app-title">
           <div className="title-row">
             <h1>Admin Portal</h1>
+            <div className="header-stat">
+              <span className="user-name" style={{ marginRight: '16px', fontSize: '14px' }}>{currentUser?.name}</span>
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="btn btn-ghost btn-sm"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
           <p>Manage minister CV records and system accounts</p>
         </div>
