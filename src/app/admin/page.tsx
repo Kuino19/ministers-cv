@@ -162,7 +162,7 @@ export default function AdminPage() {
             <div className="header-stat">
               <span className="user-name" style={{ marginRight: '16px', fontSize: '14px' }}>{currentUser?.name}</span>
               <button
-                onClick={() => signOut({ callbackUrl: '/login' })}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="btn btn-ghost btn-sm"
               >
                 Sign Out
