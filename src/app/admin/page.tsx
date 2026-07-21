@@ -6,6 +6,7 @@ import { MinisterRecord } from '@/lib/types';
 import { downloadWord, downloadPDF, downloadAllZIP } from '@/lib/export';
 import Roster from '@/components/Roster';
 import Tabs, { TabId } from '@/components/Tabs';
+import CVForm from '@/components/CVForm';
 
 interface UserItem {
   id: string;
@@ -36,6 +37,10 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState('STAFF');
   const [submitting, setSubmitting] = useState(false);
+
+  // Minister Edit/Create States
+  const [editingRecord, setEditingRecord] = useState<MinisterRecord | null>(null);
+  const [isCreatingRecord, setIsCreatingRecord] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -138,6 +143,31 @@ export default function AdminPage() {
     }
   }
 
+  async function handleSaveAdmin(data: Omit<MinisterRecord, 'id'> & { id?: string }) {
+    const method = data.id ? 'PUT' : 'POST';
+    const url = data.id ? `/api/records/${data.id}` : `/api/records`;
+    
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        showToast('Minister record saved successfully.');
+        setEditingRecord(null);
+        setIsCreatingRecord(false);
+        fetchRecords();
+      } else {
+        const errData = await res.json();
+        showToast(errData.error || 'Failed to save record.');
+      }
+    } catch {
+      showToast('Error connecting to server.');
+    }
+  }
+
   const handleDownloadWord = useCallback((r: MinisterRecord) => {
     downloadWord(r);
     showToast('Word CV downloaded.');
@@ -193,16 +223,45 @@ export default function AdminPage() {
       {toastMsg && <div className="toast show">{toastMsg}</div>}
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
-        {activeTab === 'roster' && (
-          <Roster
-            records={records}
-            onEdit={() => alert('Admins view/export only. Ministers edit their own records via the main landing page.')}
+        {activeTab === 'roster' && !editingRecord && !isCreatingRecord && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+              <button className="btn btn-primary" onClick={() => setIsCreatingRecord(true)}>
+                + Create New Minister CV
+              </button>
+            </div>
+            <Roster
+              records={records}
+              onEdit={(r) => setEditingRecord(r)}
             onDelete={handleDeleteRecord}
             onDownloadWord={handleDownloadWord}
             onDownloadPDF={handleDownloadPDF}
             onDownloadAll={handleDownloadAll}
             showToast={showToast}
           />
+          </>
+        )}
+
+        {(editingRecord || isCreatingRecord) && (
+          <div className="card" style={{ position: 'relative' }}>
+            <button 
+              className="btn btn-ghost btn-sm" 
+              style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}
+              onClick={() => { setEditingRecord(null); setIsCreatingRecord(false); }}
+            >
+              ✕ Cancel
+            </button>
+            <div style={{ padding: '0 24px' }}>
+              <h2 style={{ fontFamily: 'var(--font-playfair)', color: 'var(--primary)', marginBottom: '24px', marginTop: '24px' }}>
+                {editingRecord ? 'Editing Minister CV' : 'Create New Minister CV'}
+              </h2>
+            </div>
+            <CVForm
+              editingRecord={editingRecord || undefined}
+              onSave={handleSaveAdmin}
+              onClear={() => {}}
+            />
+          </div>
         )}
 
         {activeTab === 'users' && (
