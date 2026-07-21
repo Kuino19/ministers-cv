@@ -257,7 +257,7 @@ export default function AdminPage() {
               </h2>
             </div>
             <CVForm
-              editingRecord={editingRecord || undefined}
+              editingRecord={editingRecord || null}
               onSave={handleSaveAdmin}
               onClear={() => {}}
             />
