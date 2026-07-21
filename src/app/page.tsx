@@ -11,6 +11,7 @@ import { downloadWord, downloadPDF } from '@/lib/export';
 export default function Home() {
   const { data: session, status } = useSession();
   const [record, setRecord] = useState<MinisterRecord | null>(null);
+  const [viewMode, setViewMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function Home() {
         const data = await res.json();
         if (data && data.length > 0) {
           setRecord(data[0]);
+          setViewMode(true);
         }
       } else {
         showToast('Failed to load your profile.');
@@ -67,7 +69,8 @@ export default function Home() {
 
         if (res.ok) {
           showToast('Profile updated successfully.');
-          fetchMyRecord();
+          await fetchMyRecord();
+          setViewMode(true);
         } else {
           const errData = await res.json();
           showToast(errData.error || 'Failed to update profile.');
@@ -174,27 +177,40 @@ export default function Home() {
           <h2 style={{ fontFamily: 'var(--font-playfair)', color: 'var(--primary)', margin: 0 }}>My CV Profile</h2>
           
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {record && (
-              <>
-                <button className="btn btn-primary btn-sm" onClick={() => downloadWord(record)}>
-                  ↓ Word CV
-                </button>
-                <button className="btn btn-gold btn-sm" onClick={handlePDF} disabled={pdfLoading}>
-                  {pdfLoading ? 'Working…' : '↓ PDF CV'}
-                </button>
-              </>
-            )}
-            <button className="btn btn-ghost btn-sm" style={{ marginLeft: '8px' }} onClick={() => signOut({ callbackUrl: '/' })}>
+            <button className="btn btn-ghost btn-sm" onClick={() => signOut({ callbackUrl: '/' })}>
               Sign Out
             </button>
           </div>
         </div>
 
-        <CVForm
-          editingRecord={record}
-          onSave={handleSave}
-          onClear={() => {}}
-        />
+        {viewMode && record ? (
+          <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+            <h3 style={{ fontSize: '24px', marginBottom: '8px', color: 'var(--primary-dark)' }}>Profile Complete</h3>
+            <p style={{ color: 'var(--ink-soft)', marginBottom: '32px' }}>Your CV details have been securely saved.</p>
+            
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={() => downloadWord(record)}>
+                ↓ Download Word CV
+              </button>
+              <button className="btn btn-gold" onClick={handlePDF} disabled={pdfLoading}>
+                {pdfLoading ? 'Working…' : '↓ Download PDF CV'}
+              </button>
+            </div>
+            
+            <div style={{ marginTop: '32px' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setViewMode(false)}>
+                ✎ Edit Profile Details
+              </button>
+            </div>
+          </div>
+        ) : (
+          <CVForm
+            editingRecord={record}
+            onSave={handleSave}
+            onClear={() => {}}
+          />
+        )}
       </div>
       <Toast message={toastMsg} onDone={() => setToastMsg('')} />
     </div>
