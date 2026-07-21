@@ -15,6 +15,7 @@ const STEPS = [
   { label: 'Personal & Contact', idx: '2' },
   { label: 'Education', idx: '3' },
   { label: 'Theological Education', idx: '4' },
+  { label: 'Document Uploads', idx: '5' },
 ];
 
 export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) {
@@ -412,11 +413,22 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
             <input id="f-theo-cert" type="text" value={theoCert} onChange={(e) => setTheoCert(e.target.value)} />
           </div>
         </div>
+        </div>
+      </div>
+    );
+  }
 
-        <div className="edu-row" style={{ marginTop: '24px', marginBottom: 0 }}>
+  function renderStep5() {
+    return (
+      <div className="card" key="step5">
+        <div className="section-title">
+          <span className="idx">5</span>
+          <h2>Document Uploads (Optional)</h2>
+        </div>
+        <div className="edu-row" style={{ marginTop: '8px', marginBottom: 0 }}>
           <span className="edu-row-label">Upload Certificates</span>
           <p style={{ fontSize: '13px', color: 'var(--ink-soft)', marginBottom: '12px' }}>
-            Upload scans or photos of your certificates (Max 4MB each, up to 4 files).
+            Upload scans or photos of any relevant certificates (Professional, Educational, Theological, etc). Max 4MB each, up to 4 files.
           </p>
           <div style={{ padding: '16px', background: 'var(--input-bg)', borderRadius: '8px', border: '1px dashed var(--line)' }}>
             <UploadButton
@@ -449,7 +461,7 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
     );
   }
 
-  const stepRenderers = [renderStep1, renderStep2, renderStep3, renderStep4];
+  const stepRenderers = [renderStep1, renderStep2, renderStep3, renderStep4, renderStep5];
 
   return (
     <form onSubmit={handleSubmit} noValidate>
