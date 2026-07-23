@@ -18,8 +18,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // pdfBase64 usually comes as 'data:application/pdf;base64,...'
-    const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+    // Strip the data URI prefix (e.g. data:application/pdf;filename=generated.pdf;base64,...)
+    const base64Data = pdfBase64.includes('base64,') ? pdfBase64.split('base64,')[1] : pdfBase64;
 
     const { data, error } = await resend.emails.send({
       from: 'Foursquare CV Register <admin@goanitech.com>',
