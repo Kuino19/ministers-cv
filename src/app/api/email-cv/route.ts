@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
 
     const { data, error } = await resend.emails.send({
-      from: 'Foursquare CV Register <onboarding@resend.dev>', // Use onboarding@resend.dev for testing unless they added a custom domain
+      from: 'Foursquare CV Register <admin@goanitech.com>',
       to: email,
       subject: 'Your Minister CV',
       text: `Hello ${name},\n\nPlease find your generated Minister CV attached to this email.\n\nBest regards,\nFoursquare CV Register`,
