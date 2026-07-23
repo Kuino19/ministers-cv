@@ -12,6 +12,7 @@ interface RosterProps {
   onDownloadWord: (record: MinisterRecord) => void;
   onDownloadPDF: (record: MinisterRecord) => void;
   onDownloadAll: () => void;
+  onEmail: (record: MinisterRecord) => void;
   showToast: (msg: string) => void;
 }
 
@@ -22,6 +23,7 @@ export default function Roster({
   onDownloadWord,
   onDownloadPDF,
   onDownloadAll,
+  onEmail,
   showToast,
 }: RosterProps) {
   const [search, setSearch] = useState('');
@@ -184,6 +186,14 @@ export default function Roster({
                   title="Download PDF CV"
                 >
                   {pdfLoading === r.id ? 'Working…' : '↓ PDF'}
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => onEmail(r)}
+                  disabled={!r.email}
+                  title={r.email ? `Email PDF to ${r.email}` : "No email address provided"}
+                >
+                  ✉️ Email
                 </button>
               </div>
             </div>

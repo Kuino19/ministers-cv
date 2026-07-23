@@ -178,6 +178,16 @@ export default function AdminPage() {
     showToast('PDF CV downloaded.');
   }, []);
 
+  const handleEmailCV = useCallback(async (r: MinisterRecord) => {
+    try {
+      const { emailPDF } = await import('@/lib/export');
+      await emailPDF(r, (msg) => showToast(msg));
+      showToast('Email sent successfully!');
+    } catch (e: any) {
+      showToast('Failed to send email: ' + e.message);
+    }
+  }, []);
+
   const handleDownloadAll = useCallback(async () => {
     await downloadAllZIP(records);
     showToast('All CVs downloaded as ZIP.');
@@ -237,6 +247,7 @@ export default function AdminPage() {
             onDownloadWord={handleDownloadWord}
             onDownloadPDF={handleDownloadPDF}
             onDownloadAll={handleDownloadAll}
+            onEmail={handleEmailCV}
             showToast={showToast}
           />
           </>

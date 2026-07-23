@@ -134,3 +134,50 @@ export async function downloadAllZIP(records: MinisterRecord[]): Promise<void> {
   a.click();
   document.body.removeChild(a);
 }
+
+export async function emailPDF(r: MinisterRecord, onStatus?: (msg: string) => void): Promise<void> {
+  const jspdfModule = await import('jspdf');
+  const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
+
+  if (onStatus) onStatus('Generating PDF...');
+  const canvas = await renderCanvasForRecord(r);
+  const imgData = canvas.toDataURL('image/png');
+
+  const doc = new jsPDF('p', 'pt', 'a4');
+  const pdfWidth = doc.internal.pageSize.getWidth();
+  const pdfHeight = doc.internal.pageSize.getHeight();
+
+  const imgWidth = pdfWidth - 40;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  let heightLeft = imgHeight;
+  let position = 20;
+
+  doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+  heightLeft -= (pdfHeight - 40);
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight + 20;
+    doc.addPage();
+    doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+    heightLeft -= (pdfHeight - 40);
+  }
+
+  if (onStatus) onStatus('Sending email...');
+  const base64Pdf = doc.output('datauristring');
+
+  const response = await fetch('/api/email-cv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      pdfBase64: base64Pdf,
+      email: r.email,
+      name: r.name,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to send email');
+  }
+}
