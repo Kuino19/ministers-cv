@@ -176,15 +176,13 @@ export async function emailPDF(r: MinisterRecord, onStatus?: (msg: string) => vo
     }),
   });
 
-  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
   let data;
-  if (contentType.includes('application/json')) {
-    data = await response.json();
-  } else {
-    const text = await response.text();
-    let msg = text;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    let msg = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').substring(0, 150); // Strip HTML tags and truncate
     if (response.status === 413) msg = 'PDF is too large to email directly.';
-    if (response.status >= 500) msg = 'Server error occurred.';
     throw new Error(`Error ${response.status}: ${msg}`);
   }
 
