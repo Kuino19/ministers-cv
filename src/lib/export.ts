@@ -52,7 +52,7 @@ export async function downloadPDF(r: MinisterRecord): Promise<void> {
   const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
 
   const canvas = await renderCanvasForRecord(r);
-  const imgData = canvas.toDataURL('image/png');
+  const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
   // A4 dimensions in pt: 595.28 x 841.89
   const doc = new jsPDF('p', 'pt', 'a4');
@@ -65,14 +65,14 @@ export async function downloadPDF(r: MinisterRecord): Promise<void> {
   let heightLeft = imgHeight;
   let position = 20;
 
-  doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+  doc.addImage(imgData, 'JPEG', 20, position, imgWidth, imgHeight);
   heightLeft -= (pdfHeight - 40);
 
   // Multi-page handling if CV is long
   while (heightLeft > 0) {
     position = heightLeft - imgHeight + 20;
     doc.addPage();
-    doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+    doc.addImage(imgData, 'JPEG', 20, position, imgWidth, imgHeight);
     heightLeft -= (pdfHeight - 40);
   }
 
@@ -100,7 +100,7 @@ export async function downloadAllZIP(records: MinisterRecord[]): Promise<void> {
 
     // PDF
     const canvas = await renderCanvasForRecord(r);
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
     const doc = new jsPDF('p', 'pt', 'a4');
     const pdfWidth = doc.internal.pageSize.getWidth();
@@ -112,13 +112,13 @@ export async function downloadAllZIP(records: MinisterRecord[]): Promise<void> {
     let heightLeft = imgHeight;
     let position = 20;
 
-    doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+    doc.addImage(imgData, 'JPEG', 20, position, imgWidth, imgHeight);
     heightLeft -= (pdfHeight - 40);
 
     while (heightLeft > 0) {
       position = heightLeft - imgHeight + 20;
       doc.addPage();
-      doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+      doc.addImage(imgData, 'JPEG', 20, position, imgWidth, imgHeight);
       heightLeft -= (pdfHeight - 40);
     }
 
@@ -141,7 +141,7 @@ export async function emailPDF(r: MinisterRecord, onStatus?: (msg: string) => vo
 
   if (onStatus) onStatus('Generating PDF...');
   const canvas = await renderCanvasForRecord(r);
-  const imgData = canvas.toDataURL('image/png');
+  const imgData = canvas.toDataURL('image/jpeg', 0.6); // Compress to 60% JPEG to reduce base64 size significantly
 
   const doc = new jsPDF('p', 'pt', 'a4');
   const pdfWidth = doc.internal.pageSize.getWidth();
@@ -153,13 +153,13 @@ export async function emailPDF(r: MinisterRecord, onStatus?: (msg: string) => vo
   let heightLeft = imgHeight;
   let position = 20;
 
-  doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+  doc.addImage(imgData, 'JPEG', 20, position, imgWidth, imgHeight);
   heightLeft -= (pdfHeight - 40);
 
   while (heightLeft > 0) {
     position = heightLeft - imgHeight + 20;
     doc.addPage();
-    doc.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+    doc.addImage(imgData, 'JPEG', 20, position, imgWidth, imgHeight);
     heightLeft -= (pdfHeight - 40);
   }
 
@@ -176,7 +176,18 @@ export async function emailPDF(r: MinisterRecord, onStatus?: (msg: string) => vo
     }),
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  let data;
+  if (contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    let msg = text;
+    if (response.status === 413) msg = 'PDF is too large to email directly.';
+    if (response.status >= 500) msg = 'Server error occurred.';
+    throw new Error(`Error ${response.status}: ${msg}`);
+  }
+
   if (!response.ok) {
     throw new Error(data.error || 'Failed to send email');
   }
