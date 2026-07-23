@@ -8,7 +8,11 @@ export async function POST(req: Request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== 'ADMIN') {
+    if (!session) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const role = (session.user as any).role;
+    if (role !== 'ADMIN' && role !== 'MINISTER') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

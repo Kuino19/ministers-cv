@@ -72,6 +72,20 @@ export default function Home() {
 
         if (res.ok) {
           showToast('Profile updated successfully.');
+          
+          if (data.email) {
+            showToast('Automatically emailing your CV...');
+            try {
+              const { emailPDF } = await import('@/lib/export');
+              const recordToEmail = { ...data, id: data.id } as MinisterRecord;
+              await emailPDF(recordToEmail);
+              showToast('Profile saved and CV emailed successfully!');
+            } catch (e: any) {
+              console.error(e);
+              showToast('Profile saved, but emailing failed: ' + e.message);
+            }
+          }
+
           await fetchMyRecord();
           setViewMode(true);
         } else {
