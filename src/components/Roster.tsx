@@ -30,6 +30,7 @@ export default function Roster({
   onDownloadPDF,
   onDownloadAll,
   onEmail,
+  showToast,
   searchQuery,
   onSearchChange,
   currentPage,
