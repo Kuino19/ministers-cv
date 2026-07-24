@@ -55,4 +55,20 @@ model MinisterRecord {
   updatedAt        DateTime @updatedAt
   createdBy        User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdById      String?
+
+  @@index([name])
+  @@index([credentialNumber])
+  @@index([status])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String   // e.g. "CREATE", "UPDATE", "DELETE"
+  ministerId String?  // ID of the MinisterRecord affected (can be null if record was deleted or system action)
+  adminId    String?  // ID of the Admin/User who performed the action
+  details    String   // JSON string containing what was changed
+  createdAt  DateTime @default(now())
+
+  @@index([ministerId])
+  @@index([createdAt])
 }

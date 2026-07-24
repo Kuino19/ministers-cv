@@ -88,6 +88,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        action: 'UPDATE',
+        ministerId: id,
+        adminId: userId,
+        details: JSON.stringify({ updatedByRole: userRole }),
+      },
+    });
+
     return NextResponse.json(updated);
   } catch (err) {
     console.error('Failed to update record:', err);
@@ -121,6 +130,15 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     await prisma.ministerRecord.delete({
       where: { id },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'DELETE',
+        ministerId: id, // Record is gone, but we log the ID
+        adminId: userId,
+        details: JSON.stringify({ deletedName: record.name, deletedCredential: record.credentialNumber }),
+      },
     });
 
     return NextResponse.json({ message: 'Record deleted' });

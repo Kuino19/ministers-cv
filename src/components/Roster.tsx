@@ -14,6 +14,12 @@ interface RosterProps {
   onDownloadAll: () => void;
   onEmail: (record: MinisterRecord) => void;
   showToast: (msg: string) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  currentPage: number;
+  totalPages: number;
+  totalRecords: number;
+  onPageChange: (page: number) => void;
 }
 
 export default function Roster({
@@ -24,23 +30,36 @@ export default function Roster({
   onDownloadPDF,
   onDownloadAll,
   onEmail,
-  showToast,
+  searchQuery,
+  onSearchChange,
+  currentPage,
+  totalPages,
+  totalRecords,
+  onPageChange,
 }: RosterProps) {
-  const [search, setSearch] = useState('');
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
   const [zipLoading, setZipLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MinisterRecord | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filtered = records.filter((r) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      r.name.toLowerCase().includes(q) ||
-      r.credentialNumber.toLowerCase().includes(q) ||
-      (r.church && r.church.toLowerCase().includes(q)) ||
-      (r.district && r.district.toLowerCase().includes(q))
-    );
-  });
+  function toggleSelection(id: string) {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === records.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(records.map(r => r.id)));
+    }
+  }
+
+  async function handleBulkExportExcel() {
+    window.open('/api/export-excel', '_blank');
+  }
 
   function designationLabel(r: MinisterRecord): string {
     return r.designation === 'Other' ? r.designationOther || 'Other' : r.designation;
@@ -89,15 +108,15 @@ export default function Roster({
               type="text"
               className="search-input"
               placeholder="Search by name, credential, church…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
               aria-label="Search records"
             />
-            {search && (
+            {searchQuery && (
               <button
                 type="button"
                 className="search-clear"
-                onClick={() => setSearch('')}
+                onClick={() => onSearchChange('')}
                 aria-label="Clear search"
               >
                 ×
@@ -105,25 +124,43 @@ export default function Roster({
             )}
           </div>
           <div className="status-msg">
-            {records.length > 0 && (
-              search.trim()
-                ? `${filtered.length} of ${records.length} record${records.length === 1 ? '' : 's'}`
-                : `${records.length} record${records.length === 1 ? '' : 's'} in the register`
-            )}
+            {totalRecords} record{totalRecords === 1 ? '' : 's'}
           </div>
         </div>
-        <button
-          className="btn btn-gold btn-sm"
-          onClick={handleZIP}
-          disabled={zipLoading || !records.length}
-        >
-          {zipLoading ? 'Preparing ZIP…' : '↓ Download All (ZIP)'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="btn btn-ghost"
+            onClick={handleBulkExportExcel}
+          >
+            📊 Export Excel
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={handleZIP}
+            disabled={zipLoading || totalRecords === 0}
+          >
+            {zipLoading ? 'Preparing ZIP…' : '↓ Download All (ZIP)'}
+          </button>
+        </div>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div style={{ padding: '12px 16px', background: 'var(--primary)', color: 'white', borderRadius: '8px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{selectedIds.size} record(s) selected</span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-gold btn-sm" onClick={() => showToast('Bulk email coming soon!')}>
+              ✉️ Email Selected
+            </button>
+            <button className="btn btn-ghost btn-sm" style={{ color: 'white' }} onClick={() => setSelectedIds(new Set())}>
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* List */}
       <div className="roster">
-        {filtered.length === 0 ? (
+        {records.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
@@ -142,13 +179,21 @@ export default function Roster({
             ) : (
               <>
                 <h3>No results found</h3>
-                <p>No records match &ldquo;{search}&rdquo;. Try a different search term.</p>
+                <p>No records match &ldquo;{searchQuery}&rdquo;. Try a different search term.</p>
               </>
             )}
           </div>
         ) : (
-          filtered.map((r) => (
+          records.map((r) => (
             <div className="roster-item" key={r.id}>
+              <div style={{ marginRight: '16px', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.has(r.id)} 
+                  onChange={() => toggleSelection(r.id)} 
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+              </div>
               <div className="roster-seal">{initials(r.name)}</div>
               <div className="roster-info">
                 <div className="r-name">{r.name || 'Unnamed'}</div>
@@ -213,9 +258,30 @@ export default function Roster({
                 </button>
               </div>
             </div>
-          ))
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', padding: '16px', background: 'var(--card-bg)', borderRadius: '8px' }}>
+          <button 
+            className="btn btn-ghost btn-sm" 
+            disabled={currentPage <= 1} 
+            onClick={() => onPageChange(currentPage - 1)}
+          >
+            ← Previous
+          </button>
+          <span style={{ color: 'var(--ink-soft)' }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button 
+            className="btn btn-ghost btn-sm" 
+            disabled={currentPage >= totalPages} 
+            onClick={() => onPageChange(currentPage + 1)}
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       {deleteTarget && (

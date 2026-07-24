@@ -23,13 +23,19 @@ export default function AdminPage() {
 
   const [users, setUsers] = useState<UserItem[]>([]);
   const [records, setRecords] = useState<MinisterRecord[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingRecords, setLoadingRecords] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
   
-  // Custom Tabs logic for Admin (we could use the Tabs component but it was hardcoded for 'form' vs 'roster')
-  // We'll just build a simple tab switcher here.
-  const [activeTab, setActiveTab] = useState<'roster' | 'users'>('roster');
+  // Pagination and Search states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Custom Tabs logic for Admin
+  const [activeTab, setActiveTab] = useState<'roster' | 'users' | 'audit'>('roster');
 
   // Form states for creating new user
   const [newName, setNewName] = useState('');
@@ -44,8 +50,15 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchUsers();
-    fetchRecords();
+    fetchAuditLogs();
   }, []);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchRecords(currentPage, searchQuery);
+    }, 300);
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchQuery]);
 
   async function fetchUsers() {
     try {
@@ -59,12 +72,26 @@ export default function AdminPage() {
     }
   }
 
-  async function fetchRecords() {
+  async function fetchAuditLogs() {
     try {
-      const res = await fetch('/api/records');
+      const res = await fetch('/api/audit-logs');
       if (res.ok) {
         const data = await res.json();
-        setRecords(data);
+        setAuditLogs(data);
+      }
+    } catch (e) {
+      console.error('Failed to load audit logs', e);
+    }
+  }
+
+  async function fetchRecords(page = 1, search = '') {
+    try {
+      const res = await fetch(`/api/records?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRecords(data.records);
+        setTotalRecords(data.total);
+        setTotalPages(data.totalPages);
       }
     } finally {
       setLoadingRecords(false);
@@ -228,6 +255,13 @@ export default function AdminPage() {
         >
           System Accounts
         </button>
+        <button 
+          className={`tab-btn ${activeTab === 'audit' ? 'active' : ''}`}
+          onClick={() => setActiveTab('audit')}
+          style={{ flex: 1, padding: '12px', background: activeTab === 'audit' ? 'var(--primary)' : 'var(--card)', color: activeTab === 'audit' ? '#fff' : 'var(--ink)', border: '1px solid var(--line)', borderRadius: 'var(--radius)' }}
+        >
+          Audit Logs
+        </button>
       </div>
 
       {toastMsg && <div className="toast show">{toastMsg}</div>}
@@ -243,13 +277,22 @@ export default function AdminPage() {
             <Roster
               records={records}
               onEdit={(r) => setEditingRecord(r)}
-            onDelete={handleDeleteRecord}
-            onDownloadWord={handleDownloadWord}
-            onDownloadPDF={handleDownloadPDF}
-            onDownloadAll={handleDownloadAll}
-            onEmail={handleEmailCV}
-            showToast={showToast}
-          />
+              onDelete={handleDeleteRecord}
+              onDownloadWord={handleDownloadWord}
+              onDownloadPDF={handleDownloadPDF}
+              onDownloadAll={handleDownloadAll}
+              onEmail={handleEmailCV}
+              showToast={showToast}
+              searchQuery={searchQuery}
+              onSearchChange={(q) => {
+                setSearchQuery(q);
+                setCurrentPage(1); // Reset to page 1 on new search
+              }}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalRecords={totalRecords}
+              onPageChange={(p) => setCurrentPage(p)}
+            />
           </>
         )}
 
@@ -345,6 +388,47 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <div className="card">
+            <div className="section-title">
+              <h2>System Audit Logs</h2>
+              <p>Recent activity across the Minister CV Register.</p>
+            </div>
+            <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+              <table className="user-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Minister ID</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>No audit logs found.</td>
+                    </tr>
+                  ) : (
+                    auditLogs.map((log) => (
+                      <tr key={log.id}>
+                        <td style={{ whiteSpace: 'nowrap' }}>{new Date(log.createdAt).toLocaleString()}</td>
+                        <td>
+                          <span className={`status-badge ${log.action === 'DELETE' ? 'status-retired' : log.action === 'UPDATE' ? 'status-active' : 'status-deceased'}`}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '12px', fontFamily: 'monospace' }}>{log.ministerId || '-'}</td>
+                        <td style={{ fontSize: '13px' }}>{log.details}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

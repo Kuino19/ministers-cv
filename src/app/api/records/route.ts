@@ -3,11 +3,17 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const limit = parseInt(searchParams.get('limit') || '50', 10);
+  const search = searchParams.get('search') || '';
+  const skip = (page - 1) * limit;
 
   try {
     const userRole = (session.user as any).role;
@@ -17,19 +23,42 @@ export async function GET() {
       const records = await prisma.ministerRecord.findMany({
         where: { id: userId },
       });
-      return NextResponse.json(records);
+      return NextResponse.json({ records, total: records.length, page: 1, totalPages: 1 });
     }
 
-    const records = await prisma.ministerRecord.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        createdBy: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
+    const whereClause = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { credentialNumber: { contains: search, mode: 'insensitive' as const } },
+            { church: { contains: search, mode: 'insensitive' as const } },
+            { district: { contains: search, mode: 'insensitive' as const } },
+            { zone: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
 
-    return NextResponse.json(records);
+    const [records, total] = await Promise.all([
+      prisma.ministerRecord.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          createdBy: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      }),
+      prisma.ministerRecord.count({ where: whereClause }),
+    ]);
+
+    return NextResponse.json({
+      records,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error('Failed to fetch records:', err);
     return NextResponse.json({ error: 'Failed to fetch records' }, { status: 500 });
@@ -121,6 +150,15 @@ export async function POST(req: Request) {
         houseAddress,
         certificateUrls,
         createdById: userId || null,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'CREATE',
+        ministerId: newRecord.id,
+        adminId: userId,
+        details: JSON.stringify({ name: newRecord.name, credentialNumber: newRecord.credentialNumber }),
       },
     });
 
