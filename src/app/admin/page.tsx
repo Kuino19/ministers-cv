@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, useCallback } from 'react';
+import { useState, useEffect, FormEvent, useCallback, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { MinisterRecord } from '@/lib/types';
 import { downloadWord, downloadPDF, downloadAllZIP } from '@/lib/export';
@@ -98,9 +98,12 @@ export default function AdminPage() {
     }
   }
 
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   function showToast(msg: string) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
+    toastTimer.current = setTimeout(() => setToastMsg(''), 3000);
   }
 
   async function handleCreateUser(e: FormEvent) {

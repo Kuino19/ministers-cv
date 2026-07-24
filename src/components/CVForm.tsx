@@ -124,6 +124,12 @@ export default function CVForm({ editingRecord, onSave, onClear }: CVFormProps) 
     if (!credentialNumber.trim()) errs.credentialNumber = 'Credential number is required.';
     if (!designation) errs.designation = 'Please select a designation.';
     if (!status) errs.status = 'Please select a status.';
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errs.email = 'Please enter a valid email address.';
+    }
+    if (phone && !/^[\d\s\-+()]{7,20}$/.test(phone)) {
+      errs.phone = 'Please enter a valid phone number.';
+    }
     return errs;
   }
 

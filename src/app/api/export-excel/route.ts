@@ -13,6 +13,7 @@ export async function GET() {
   try {
     const records = await prisma.ministerRecord.findMany({
       orderBy: { createdAt: 'desc' },
+      take: 10000, // Safety limit to prevent memory overload on serverless
     });
 
     const data = records.map(r => ({

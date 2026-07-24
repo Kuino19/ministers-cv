@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Resend } from 'resend';
+import { esc } from '@/lib/cv-template';
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');
@@ -27,11 +28,11 @@ export async function GET(req: Request) {
       if (!record.email) continue;
       
       await resend.emails.send({
-        from: 'Ministers Register <onboarding@resend.dev>', // Should use verified domain in production
+        from: 'Foursquare CV Register <admin@goanitech.com>',
         to: record.email,
         subject: 'Annual Update: Minister CV Register',
         html: `
-          <h3>Hello ${record.name},</h3>
+          <h3>Hello ${esc(record.name)},</h3>
           <p>It has been a year since your Minister CV was last updated in our register.</p>
           <p>Please log in to the portal and ensure all your details are still current.</p>
           <p>Thank you.</p>

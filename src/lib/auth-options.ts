@@ -59,16 +59,19 @@ export const authOptions: NextAuthOptions = {
         }
 
         const name = credentials.name.trim();
-        const credentialNumber = credentials.credentialNumber.trim().toUpperCase();
+        const credentialNumber = credentials.credentialNumber.trim();
 
-        const inputCredentialNormalized = credentialNumber.replace(/[^A-Z0-9]/g, '');
-
-        // Validate format removed per user request: allow any format
-        // Check if minister exists
+        // Check if minister exists using a direct database query (not loading all records)
         let minister;
         try {
-          const allMinisters = await prisma.ministerRecord.findMany();
-          minister = allMinisters.find(m => m.credentialNumber.toUpperCase().replace(/[^A-Z0-9]/g, '') === inputCredentialNormalized);
+          minister = await prisma.ministerRecord.findFirst({
+            where: {
+              credentialNumber: {
+                equals: credentialNumber,
+                mode: 'insensitive',
+              },
+            },
+          });
         } catch (e) {
           console.error("Prisma error:", e);
           throw new Error('Database connection failed. Please verify your internet connection or backend status.');
@@ -89,7 +92,7 @@ export const authOptions: NextAuthOptions = {
                 name: name,
                 credentialNumber: credentialNumber,
                 designation: '', // Required by schema
-                status: 'Active', // Default status or empty
+                status: 'Active', // Default status
               },
             });
           } catch (e) {
@@ -128,5 +131,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  secret: process.env.NEXTAUTH_SECRET || 'ministers-cv-register-secret-key-2026-secure-random',
+  secret: process.env.NEXTAUTH_SECRET,
 };

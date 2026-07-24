@@ -4,6 +4,15 @@ import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
 import { Resend } from 'resend';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'ADMIN') {
@@ -45,13 +54,13 @@ export async function POST(req: Request) {
 
       try {
         await resend.emails.send({
-          from: 'Ministers Register <onboarding@resend.dev>', // Should use verified domain in production
+          from: 'Foursquare CV Register <admin@goanitech.com>',
           to: record.email,
           subject: subject,
           html: `
             <div style="font-family: sans-serif; color: #111;">
-              <h3>Dear ${record.name},</h3>
-              <div style="white-space: pre-wrap; line-height: 1.5;">${message}</div>
+              <h3>Dear ${escapeHtml(record.name)},</h3>
+              <div style="white-space: pre-wrap; line-height: 1.5;">${escapeHtml(message)}</div>
               <br/>
               <p><i>- Admin, Foursquare Gospel Church in Nigeria</i></p>
             </div>
