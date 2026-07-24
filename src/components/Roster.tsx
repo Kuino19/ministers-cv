@@ -258,6 +258,7 @@ export default function Roster({
                 </button>
               </div>
             </div>
+          ))
         )}
       </div>
 
