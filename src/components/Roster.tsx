@@ -43,6 +43,12 @@ export default function Roster({
   const [deleteTarget, setDeleteTarget] = useState<MinisterRecord | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  // Bulk Email State
+  const [showBulkEmail, setShowBulkEmail] = useState(false);
+  const [bulkSubject, setBulkSubject] = useState('');
+  const [bulkMessage, setBulkMessage] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   function toggleSelection(id: string) {
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id);
@@ -60,6 +66,39 @@ export default function Roster({
 
   async function handleBulkExportExcel() {
     window.open('/api/export-excel', '_blank');
+  }
+
+  async function handleSendBulkEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (selectedIds.size === 0) return;
+    
+    setBulkLoading(true);
+    try {
+      const res = await fetch('/api/records/bulk-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recordIds: Array.from(selectedIds),
+          subject: bulkSubject,
+          message: bulkMessage,
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Bulk email sent successfully.');
+        setShowBulkEmail(false);
+        setBulkSubject('');
+        setBulkMessage('');
+        setSelectedIds(new Set()); // Clear selection after sending
+      } else {
+        showToast(data.error || 'Failed to send bulk email.');
+      }
+    } catch (err) {
+      showToast('Error connecting to server.');
+    } finally {
+      setBulkLoading(false);
+    }
   }
 
   function designationLabel(r: MinisterRecord): string {
@@ -149,7 +188,7 @@ export default function Roster({
         <div style={{ padding: '12px 16px', background: 'var(--primary)', color: 'white', borderRadius: '8px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>{selectedIds.size} record(s) selected</span>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn btn-gold btn-sm" onClick={() => showToast('Bulk email coming soon!')}>
+            <button className="btn btn-gold btn-sm" onClick={() => setShowBulkEmail(true)}>
               ✉️ Email Selected
             </button>
             <button className="btn btn-ghost btn-sm" style={{ color: 'white' }} onClick={() => setSelectedIds(new Set())}>
@@ -302,6 +341,48 @@ export default function Roster({
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Email Dialog */}
+      {showBulkEmail && (
+        <div className="confirm-dialog-overlay" onClick={() => setShowBulkEmail(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()} style={{ width: '500px', maxWidth: '90vw' }}>
+            <h3 style={{ marginBottom: '16px' }}>Send Bulk Email</h3>
+            <p style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--ink-soft)' }}>
+              Sending email to <strong>{selectedIds.size}</strong> selected minister(s).
+            </p>
+            <form onSubmit={handleSendBulkEmail}>
+              <div className="field" style={{ marginBottom: '12px' }}>
+                <label>Subject</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={bulkSubject} 
+                  onChange={e => setBulkSubject(e.target.value)} 
+                  placeholder="e.g. Annual Convention Reminder"
+                />
+              </div>
+              <div className="field" style={{ marginBottom: '24px' }}>
+                <label>Message</label>
+                <textarea 
+                  required 
+                  rows={6}
+                  value={bulkMessage} 
+                  onChange={e => setBulkMessage(e.target.value)} 
+                  placeholder="Type your message here..."
+                />
+              </div>
+              <div className="confirm-actions">
+                <button type="button" className="btn btn-ghost" onClick={() => setShowBulkEmail(false)} disabled={bulkLoading}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-gold" disabled={bulkLoading}>
+                  {bulkLoading ? 'Sending...' : 'Send Emails'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

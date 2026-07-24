@@ -41,11 +41,17 @@ export function cvHTML(r: MinisterRecord): string {
   });
 
   return `
-  <div style="font-family:'Inter', 'Arial', sans-serif; color:#1B2A20; width:100%; max-width:750px; margin:0 auto; padding:48px 48px; background:#ffffff; box-sizing:border-box; line-height:1.5;">
+  <div style="font-family:'Inter', 'Arial', sans-serif; color:#1B2A20; width:100%; max-width:750px; margin:0 auto; padding:48px 48px; background:#ffffff; box-sizing:border-box; line-height:1.5; position:relative;">
     
-    <!-- FOURSQUARE HEADER -->
-    <div style="border-bottom:2.5px solid #1F4D36; padding-bottom:16px; margin-bottom:24px; text-align:center;">
-      <img src="/logo.png" alt="FOURSQUARE LOGO" style="max-height: 80px; margin-bottom: 8px;" />
+    <!-- WATERMARK BACKGROUND -->
+    <div style="position:absolute; top:0; left:0; right:0; bottom:0; background-image:url('/logo.png'); background-repeat:no-repeat; background-position:center; background-size:50%; opacity:0.04; z-index:0; pointer-events:none;"></div>
+
+    <!-- INNER PAGE BORDER -->
+    <div style="position:relative; z-index:1; border:3px double #1F4D36; padding:36px 36px; border-radius:4px;">
+    
+      <!-- FOURSQUARE HEADER -->
+      <div style="border-bottom:2.5px solid #1F4D36; padding-bottom:16px; margin-bottom:24px; text-align:center;">
+        <img src="/logo.png" alt="FOURSQUARE LOGO" style="max-height: 80px; margin-bottom: 8px;" />
       <h2 style="font-family:Georgia, serif; font-size:20px; font-weight:bold; color:#1F4D36; margin:0 0 4px 0; text-transform:uppercase;">FOURSQUARE GOSPEL CHURCH IN NIGERIA</h2>
       <h3 style="font-family:Georgia, serif; font-size:16px; font-weight:bold; color:#A2792B; margin:0 0 16px 0; text-transform:uppercase;">MINISTERIAL CV</h3>
     </div>
@@ -205,14 +211,16 @@ export function cvHTML(r: MinisterRecord): string {
     </div>
 
     <!-- REFERENCES / FOOTER -->
-    <div style="margin-top:36px; padding-top:16px; border-top:1px solid #DDD6C2; font-size:11px; color:#4A5A4E; display:table; width:100%;">
-      <div style="display:table-cell; vertical-align:middle;">
-        <strong>References:</strong> Available upon request.
+      <div style="margin-top:36px; padding-top:16px; border-top:1px solid #DDD6C2; font-size:11px; color:#4A5A4E; display:table; width:100%;">
+        <div style="display:table-cell; vertical-align:middle;">
+          <strong>References:</strong> Available upon request.
+        </div>
+        <div style="display:table-cell; vertical-align:middle; text-align:right; font-size:10px; color:#A2792B;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=FGC-MINISTER-${esc(val(r.credentialNumber))}" alt="QR" style="height:40px; margin-bottom:4px;" /><br/>
+          Generated ${today}
+        </div>
       </div>
-      <div style="display:table-cell; vertical-align:middle; text-align:right; font-size:10px; color:#A2792B;">
-        Generated ${today}
-      </div>
-    </div>
 
+    </div>
   </div>`;
 }
